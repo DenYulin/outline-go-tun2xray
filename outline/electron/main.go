@@ -17,6 +17,7 @@ package main
 import (
 	"flag"
 	"fmt"
+	"github.com/Jigsaw-Code/outline-go-tun2socks/xray"
 	"io"
 	"os"
 	"os/signal"
@@ -40,19 +41,21 @@ const (
 )
 
 var args struct {
-	tunAddr           *string
-	tunGw             *string
-	tunMask           *string
-	tunName           *string
-	tunDNS            *string
-	proxyHost         *string
-	proxyPort         *int
-	proxyPassword     *string
-	proxyCipher       *string
-	logLevel          *string
-	checkConnectivity *bool
-	dnsFallback       *bool
-	version           *bool
+	tunAddr            *string
+	tunGw              *string
+	tunMask            *string
+	tunName            *string
+	tunDNS             *string
+	xrayConfigFilePath *string
+	checkXrayConfig    *bool
+	proxyHost          *string
+	proxyPort          *int
+	proxyPassword      *string
+	proxyCipher        *string
+	logLevel           *string
+	checkConnectivity  *bool
+	dnsFallback        *bool
+	version            *bool
 }
 var version string // Populated at build time through `-X main.version=...`
 var lwipWriter io.Writer
@@ -63,9 +66,11 @@ func main() {
 	args.tunMask = flag.String("tunMask", "255.255.255.0", "TUN interface network mask; prefixlen for IPv6")
 	args.tunDNS = flag.String("tunDNS", "1.1.1.1,9.9.9.9,208.67.222.222", "Comma-separated list of DNS resolvers for the TUN interface (Windows only)")
 	args.tunName = flag.String("tunName", "tun0", "TUN interface name")
-	args.proxyHost = flag.String("proxyHost", "", "Shadowsocks proxy hostname or IP address")
-	args.proxyPort = flag.Int("proxyPort", 0, "Shadowsocks proxy port number")
-	args.proxyPassword = flag.String("proxyPassword", "", "Shadowsocks proxy password")
+	args.xrayConfigFilePath = flag.String("xrayConfigFilePath", "config.json", "The xray client config file path in system")
+	args.checkXrayConfig = flag.Bool("checkXrayConfig", false, "Test xray config file only, without launching Xray client.")
+	args.proxyHost = flag.String("proxyHost", "127.0.0.1", "Shadowsocks proxy hostname or IP address")
+	args.proxyPort = flag.Int("proxyPort", 10800, "Shadowsocks proxy port number")
+	args.proxyPassword = flag.String("proxyPassword", "password", "Shadowsocks proxy password")
 	args.proxyCipher = flag.String("proxyCipher", "chacha20-ietf-poly1305", "Shadowsocks proxy encryption cipher")
 	args.logLevel = flag.String("logLevel", "info", "Logging level: debug|info|warn|error|none")
 	args.dnsFallback = flag.Bool("dnsFallback", false, "Enable DNS fallback over TCP (overrides the UDP handler).")
@@ -105,6 +110,11 @@ func main() {
 		os.Exit(connErrCode)
 	}
 
+	xray.StartXray(*args.xrayConfigFilePath, *args.checkXrayConfig)
+	if *args.checkXrayConfig {
+		os.Exit(0)
+	}
+
 	// Open TUN device
 	dnsResolvers := strings.Split(*args.tunDNS, ",")
 	tunDevice, err := tun.OpenTunDevice(*args.tunName, *args.tunAddr, *args.tunGw, *args.tunMask, dnsResolvers, persistTun)
@@ -128,9 +138,9 @@ func main() {
 	}
 
 	// Configure LWIP stack to receive input data from the TUN device
-	lwipWriter := core.NewLWIPStack()
+	lwipWriter = core.NewLWIPStack()
 	go func() {
-		_, err := io.CopyBuffer(lwipWriter, tunDevice, make([]byte, mtu))
+		_, err = io.CopyBuffer(lwipWriter, tunDevice, make([]byte, mtu))
 		if err != nil {
 			log.Errorf("Failed to write data to network stack: %v", err)
 			os.Exit(oss.Unexpected)
