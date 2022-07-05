@@ -28,8 +28,8 @@ const (
 	Unexpected              = 1
 	ConfigFileNotExist      = 2
 	UnsupportedConfigFormat = 3
-	XrayClientStartError    = 4
-	XrayClientCreateError   = 5
+	ClientStartError        = 4
+	ClientCreateError       = 5
 )
 
 var XrayClient core.Server
@@ -55,7 +55,7 @@ func StartXray(configFilePath string, checkXrayConfigFiles bool) error {
 	xrayClient, err := CreateXrayClient(JsonFormat, configFilePath)
 	if err != nil {
 		log.Errorf("Failed to create xray client, configFilePath: %s, error: %s", configFilePath, err.Error())
-		os.Exit(XrayClientCreateError)
+		os.Exit(ClientCreateError)
 	}
 
 	if checkXrayConfigFiles {
@@ -65,7 +65,7 @@ func StartXray(configFilePath string, checkXrayConfigFiles bool) error {
 
 	if err = xrayClient.Start(); err != nil {
 		log.Errorf("Failed to start xray client, error: %s", err.Error())
-		os.Exit(XrayClientStartError)
+		os.Exit(ClientStartError)
 	}
 	defer xrayClient.Close()
 
