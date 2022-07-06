@@ -2,7 +2,7 @@ package common
 
 import (
 	"encoding/json"
-	"github.com/Jigsaw-Code/outline-go-tun2socks/features"
+	"github.com/Jigsaw-Code/outline-go-tun2socks"
 	"github.com/Jigsaw-Code/outline-go-tun2socks/xray"
 	"github.com/eycorsican/go-tun2socks/common/log"
 	_ "github.com/xtls/xray-core/common"
@@ -17,10 +17,7 @@ import (
 const SeparatorComma = ","
 
 const (
-	VMess       string = "vmess"
-	VLess       string = "vless"
-	Trojan      string = "trojan"
-	ShadowSocks string = "shadowsocks"
+	VLess string = "vless"
 )
 
 func CreateDNSConfig(routeMode int, dnsConf string) *conf.DNSConfig {
@@ -64,9 +61,193 @@ func toNameServerConfig(hostPort string) *conf.NameServerConfig {
 	return newConfig
 }
 
-func CreateVLessOutboundDetourConfig(profile *features.VLess) conf.OutboundDetourConfig {
-	// TODO
-	return conf.OutboundDetourConfig{}
+func CreateVLessOutboundDetourConfig(profile *outline_go_tun2xray.VLess) conf.OutboundDetourConfig {
+	outboundsSettings, _ := json.Marshal(xray.OutboundsSettings{
+		Vnext: []xray.Vnext{
+			{
+				Address: profile.Add,
+				Port:    profile.Port,
+				Users: []xray.Users{
+					{
+						ID:         profile.ID,
+						Encryption: "none",
+						Flow:       profile.Flow,
+						Level:      8,
+					},
+				},
+			},
+		},
+	})
+
+	outboundsSettingsMsg := json.RawMessage(outboundsSettings)
+	muxEnabled := false
+	if profile.Mux > 0 {
+		muxEnabled = true
+	} else {
+		profile.Mux = -1
+	}
+	tcp := conf.TransportProtocol("tcp")
+	vLessOutboundDetourConfig := conf.OutboundDetourConfig{
+		Protocol: "vless",
+		Tag:      "proxy",
+		MuxSettings: &conf.MuxConfig{
+			Enabled:     muxEnabled,
+			Concurrency: int16(profile.Mux),
+		},
+		Settings: &outboundsSettingsMsg,
+		StreamSetting: &conf.StreamConfig{
+			Network:  &tcp,
+			Security: "",
+		},
+	}
+
+	if profile.Net == "ws" {
+		transportProtocol := conf.TransportProtocol(profile.Net)
+		vLessOutboundDetourConfig.StreamSetting = &conf.StreamConfig{
+			Network:    &transportProtocol,
+			WSSettings: &conf.WebSocketConfig{Path: profile.Path},
+		}
+		if profile.Host != "" {
+			vLessOutboundDetourConfig.StreamSetting.WSSettings.Headers = map[string]string{"Host": profile.Host}
+		}
+	}
+
+	if profile.Net == "h2" {
+		transportProtocol := conf.TransportProtocol(profile.Net)
+		vLessOutboundDetourConfig.StreamSetting = &conf.StreamConfig{
+			Network:      &transportProtocol,
+			HTTPSettings: &conf.HTTPConfig{Path: profile.Path},
+		}
+		if profile.Host != "" {
+			hosts := strings.Split(profile.Host, ",")
+			vLessOutboundDetourConfig.StreamSetting.HTTPSettings.Host = conf.NewStringList(hosts)
+		}
+	}
+
+	if profile.Net == "quic" {
+		transportProtocol := conf.TransportProtocol(profile.Net)
+		vLessOutboundDetourConfig.StreamSetting = &conf.StreamConfig{
+			Network:      &transportProtocol,
+			QUICSettings: &conf.QUICConfig{Key: profile.Path},
+		}
+		if profile.Host != "" {
+			vLessOutboundDetourConfig.StreamSetting.QUICSettings.Security = profile.Host
+		}
+		if profile.Type != "" {
+			header, _ := json.Marshal(xray.QUICSettingsHeader{Type: profile.Type})
+			vLessOutboundDetourConfig.StreamSetting.QUICSettings.Header = header
+		}
+	}
+
+	if profile.Net == "kcp" {
+		transportProtocol := conf.TransportProtocol(profile.Net)
+		mtu := uint32(1350)
+		tti := uint32(50)
+		upCap := uint32(12)
+		downCap := uint32(100)
+		congestion := false
+		readBufferSize := uint32(1)
+		writeBufferSize := uint32(1)
+		vLessOutboundDetourConfig.StreamSetting = &conf.StreamConfig{
+			Network: &transportProtocol,
+			KCPSettings: &conf.KCPConfig{
+				Mtu:             &mtu,
+				Tti:             &tti,
+				UpCap:           &upCap,
+				DownCap:         &downCap,
+				Congestion:      &congestion,
+				ReadBufferSize:  &readBufferSize,
+				WriteBufferSize: &writeBufferSize,
+			},
+		}
+		if profile.Type != "" {
+			header, _ := json.Marshal(xray.KCPSettingsHeader{Type: profile.Type})
+			vLessOutboundDetourConfig.StreamSetting.KCPSettings.HeaderConfig = json.RawMessage(header)
+		}
+	}
+
+	// tcp 带 http 伪装
+	if profile.Net == "tcp" && profile.Type == "http" {
+		transportProtocol := conf.TransportProtocol(profile.Net)
+		tcpSettingsHeader := xray.TCPSettingsHeader{
+			Type: profile.Type,
+			TCPSettingsRequest: xray.TCPSettingsRequest{
+				Version: "1.1",
+				Method:  "GET",
+				Path:    strings.Split(profile.Path, ","),
+				Headers: xray.HTTPHeaders{
+					UserAgent:      []string{"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/80.0.3987.149 Safari/537.36"},
+					AcceptEncoding: []string{"gzip, deflate"},
+					Connection:     "keep-alive",
+					Pragma:         "no-cache",
+					Host:           strings.Split(profile.Host, ","),
+				},
+			},
+		}
+		header, _ := json.Marshal(tcpSettingsHeader)
+		vLessOutboundDetourConfig.StreamSetting = &conf.StreamConfig{
+			Network:  &transportProtocol,
+			Security: profile.TLS,
+			TCPSettings: &conf.TCPConfig{
+				HeaderConfig: header,
+			},
+		}
+	}
+
+	if profile.TLS == "tls" {
+		vLessOutboundDetourConfig.StreamSetting.Security = profile.TLS
+		tlsConfig := &conf.TLSConfig{Insecure: profile.AllowInsecure}
+		if profile.Host != "" {
+			tlsConfig.ServerName = profile.Host
+		}
+		vLessOutboundDetourConfig.StreamSetting.TLSSettings = tlsConfig
+	}
+
+	if profile.TLS == "xtls" {
+		vLessOutboundDetourConfig.StreamSetting.Security = profile.TLS
+		xTlsConfig := &conf.XTLSConfig{Insecure: profile.AllowInsecure}
+		if profile.Host != "" {
+			xTlsConfig.ServerName = profile.Host
+		}
+		vLessOutboundDetourConfig.StreamSetting.XTLSSettings = xTlsConfig
+	}
+
+	return vLessOutboundDetourConfig
+}
+
+func CreatePolicyConfig() *conf.PolicyConfig {
+	handshake := uint32(4)
+	connIdle := uint32(300)
+	downLinkOnly := uint32(1)
+	uplinkOnly := uint32(1)
+	return &conf.PolicyConfig{
+		Levels: map[uint32]*conf.Policy{
+			8: {
+				ConnectionIdle: &connIdle,
+				DownlinkOnly:   &downLinkOnly,
+				Handshake:      &handshake,
+				UplinkOnly:     &uplinkOnly,
+			},
+		},
+		System: &conf.SystemPolicy{
+			StatsOutboundUplink:   true,
+			StatsOutboundDownlink: true,
+		},
+	}
+}
+
+func CreateFreedomOutboundDetourConfig(useIPv6 bool) conf.OutboundDetourConfig {
+	domainStrategy := "UseIPv4"
+	if useIPv6 {
+		domainStrategy = "UseIP"
+	}
+	outboundsSettings, _ := json.Marshal(xray.OutboundsSettings{DomainStrategy: domainStrategy})
+	outboundsSettingsMsg := json.RawMessage(outboundsSettings)
+	return conf.OutboundDetourConfig{
+		Protocol: "freedom",
+		Tag:      "direct",
+		Settings: &outboundsSettingsMsg,
+	}
 }
 
 // CreateRouterConfig
@@ -74,7 +255,7 @@ func CreateVLessOutboundDetourConfig(profile *features.VLess) conf.OutboundDetou
 // 1 bypass LAN
 // 2 bypass China
 // 3 bypass LAN & China
-// 4 GFWList
+// 4 GFWList`
 // 5 ChinaList
 // >= 6 bypass LAN & China & AD block
 // 	0: "Plain", 1: "Regex", 2: "Domain", 3: "Full",

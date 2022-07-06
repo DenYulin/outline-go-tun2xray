@@ -1,44 +1,42 @@
 package features
 
-import (
-	"github.com/Jigsaw-Code/outline-go-tun2socks/common"
-	"github.com/xtls/xray-core/infra/conf"
-)
-
 type VLessOptions struct {
-	LogLevel  string `json:"logLevel"`
-	RouteMode int    `json:"routeMode"`
-	DNS       string `json:"DNS"`
+	UseIPv6       bool   `json:"useIPv6"`
+	LogLevel      string `json:"logLevel"`
+	RouteMode     int    `json:"routeMode"`
+	DNS           string `json:"DNS"`
+	AllowInsecure bool   `json:"allowInsecure"`
+	Mux           int    `json:"mux"`
 }
 
 type VLess struct {
+	Host     string
+	Path     string
+	TLS      string
+	Add      string
+	Port     int
+	Net      string
+	ID       string
+	Flow     string
+	Type     string // headerType
 	Protocol string `json:"protocol"`
 	VLessOptions
 }
 
-func LoadVLessConfig(profile *VLess) {
-	jsonConfig := &conf.Config{}
-	jsonConfig.LogConfig = &conf.LogConfig{
-		LogLevel: profile.LogLevel,
-	}
-
-	// https://github.com/Loyalsoldier/v2ray-rules-dat
-	jsonConfig.DNSConfig = common.CreateDNSConfig(profile.RouteMode, profile.DNS)
-
-	// update rules
-	jsonConfig.RouterConfig = common.CreateRouterConfig(profile.RouteMode)
+type Users struct {
+	ID         string `json:"id"`
+	Encryption int    `json:"encryption"`
+	Flow       string `json:"flow"`
+	Level      int    `json:"level"`
 }
 
-func (profile *VLess) getProxyOutboundDetourConfig() conf.OutboundDetourConfig {
-	proxyOutboundConfig := conf.OutboundDetourConfig{}
-	//if profile.Protocol == common.VMess {
-	//    proxyOutboundConfig = createVmessOutboundDetourConfig(profile)
-	//}
-	//if profile.Protocol == common.Trojan {
-	//    proxyOutboundConfig = createTrojanOutboundDetourConfig(profile)
-	//}
-	if profile.Protocol == common.VLess {
-		proxyOutboundConfig = common.CreateVLessOutboundDetourConfig(profile)
-	}
-	return proxyOutboundConfig
+type Vnext struct {
+	Address string  `json:"address"`
+	Port    int     `json:"port"`
+	Users   []Users `json:"users"`
+}
+
+type OutboundsSettings struct {
+	Vnext          []Vnext `json:"vnext,omitempty"`
+	DomainStrategy string  `json:"domainStrategy,omitempty"`
 }

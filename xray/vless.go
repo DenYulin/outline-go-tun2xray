@@ -24,3 +24,31 @@ type OutboundsSettings struct {
 	Vnext          []Vnext `json:"vnext,omitempty"`
 	DomainStrategy string  `json:"domainStrategy,omitempty"`
 }
+
+type QUICSettingsHeader struct {
+	Type string `json:"type"`
+}
+
+type KCPSettingsHeader struct {
+	Type string `json:"type"`
+}
+
+type TCPSettingsHeader struct {
+	Type               string             `json:"type"`
+	TCPSettingsRequest TCPSettingsRequest `json:"request"`
+}
+
+type TCPSettingsRequest struct {
+	Version string      `json:"version"`
+	Method  string      `json:"method"`
+	Path    []string    `json:"path"`
+	Headers HTTPHeaders `json:"headers"`
+}
+
+type HTTPHeaders struct {
+	UserAgent      []string `json:"User-Agent"`
+	AcceptEncoding []string `json:"Accept-Encoding"`
+	Connection     string   `json:"Connection"`
+	Pragma         string   `json:"Pragma"`
+	Host           []string `json:"Host"`
+}
