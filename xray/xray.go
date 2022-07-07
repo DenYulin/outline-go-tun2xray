@@ -2,8 +2,11 @@ package xray
 
 import (
 	"bytes"
+	"encoding/json"
+	"errors"
 	"github.com/Jigsaw-Code/outline-go-tun2socks/features"
 	"github.com/eycorsican/go-tun2socks/common/log"
+	"github.com/xtls/xray-core/common/cmdarg"
 	xnet "github.com/xtls/xray-core/common/net"
 	"github.com/xtls/xray-core/core"
 	"github.com/xtls/xray-core/infra/conf"
@@ -12,6 +15,8 @@ import (
 	"strconv"
 	"strings"
 )
+
+const JsonFormat = "json"
 
 type VLess features.VLess
 
@@ -31,6 +36,34 @@ func StartInstance(config []byte) (*core.Instance, error) {
 		log.Errorf("Create xray instance with protobuf config error, error: %s", err.Error())
 		return nil, err
 	}
+	if err = instance.Start(); err != nil {
+		log.Errorf("Failed to start xray instance, error: %s", err.Error())
+		return nil, err
+	}
+
+	return instance, nil
+}
+
+func StartInstanceWithJson(configFilePath string) (*core.Instance, error) {
+
+	configFiles := cmdarg.Arg{configFilePath}
+	config, err := core.LoadConfig(JsonFormat, configFiles)
+	if err != nil {
+		log.Errorf("Load xray config error, error: %s", err.Error())
+		return nil, errors.New("failed to load config files, configFiles: " + configFiles.String())
+	}
+
+	{
+		jsonBytes, _ := json.Marshal(config)
+		log.Infof("Config Json: %s", string(jsonBytes))
+	}
+
+	instance, err := core.New(config)
+	if err != nil {
+		log.Infof("Failed to create xray client, error: %s", err.Error())
+		return nil, err
+	}
+
 	if err = instance.Start(); err != nil {
 		log.Errorf("Failed to start xray instance, error: %s", err.Error())
 		return nil, err
