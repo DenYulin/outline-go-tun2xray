@@ -58,17 +58,24 @@ func startXRayInstance(profile *VLess) (*core.Instance, error) {
 
 	jsonConfig, err := json.Marshal(config)
 	if err != nil {
+		log.Fatalf("Config struct deserialize to json bytes error, error: %+v", err)
 		return nil, err
 	}
 
+	fmt.Printf("Config struct deserialize to json successfully, jsonConfig: %s\n", string(jsonConfig))
+	log.Infof("Config struct deserialize to json successfully, jsonConfig: %s", string(jsonConfig))
+
 	decodeJSONConfig, err := serial.DecodeJSONConfig(bytes.NewReader(jsonConfig))
 	if err != nil {
+		log.Fatalf("Decode json config with reader error, error: %s", err.Error())
 		return nil, err
 	}
 	decodeJSONConfig.DNSConfig = xray.CreateDNSConfig(profile.VLessOptions)
 
 	pbConfig, err := decodeJSONConfig.Build()
 	if err != nil {
+		fmt.Printf("Execute decodeJsonConfig.build error, error: %s\n", err.Error())
+		log.Fatalf("Execute decodeJSONConfig.build error, error: %s", err.Error())
 		return nil, err
 	}
 	instance, err := core.New(pbConfig)

@@ -9,6 +9,8 @@ var profile = &tun2xray.VLess{
 	Host:         "www.subaru-rabbit.cc",
 	Path:         "/",
 	TLS:          "xtls",
+	Address:      "www.subaru-rabbit.cc",
+	Port:         443,
 	Net:          "tcp",
 	ID:           "2d45a5ae-eb93-4649-8bd5-fe2c282ed31e", // VLess 的用户 ID
 	Flow:         "xtls-rprx-direct",                     // 流控模式，用于选择 XTLS 的算法。
