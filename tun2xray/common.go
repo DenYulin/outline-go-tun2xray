@@ -1,8 +1,7 @@
-package common
+package tun2xray
 
 import (
 	"encoding/json"
-	"github.com/Jigsaw-Code/outline-go-tun2socks"
 	"github.com/Jigsaw-Code/outline-go-tun2socks/xray"
 	"github.com/eycorsican/go-tun2socks/common/log"
 	_ "github.com/xtls/xray-core/common"
@@ -17,7 +16,7 @@ import (
 const SeparatorComma = ","
 
 const (
-	VLess string = "vless"
+	VLESS string = "vless"
 )
 
 func CreateDNSConfig(routeMode int, dnsConf string) *conf.DNSConfig {
@@ -61,11 +60,30 @@ func toNameServerConfig(hostPort string) *conf.NameServerConfig {
 	return newConfig
 }
 
-func CreateVLessOutboundDetourConfig(profile *outline_go_tun2xray.VLess) conf.OutboundDetourConfig {
+func CreateInboundDetourConfig(proxyPort uint32) conf.InboundDetourConfig {
+	inboundsSettings, _ := json.Marshal(xray.InboundsSettings{
+		Auth: "noauth",
+		IP:   "127.0.0.1",
+		UDP:  true,
+	})
+
+	inboundsSettingsMsg := json.RawMessage(inboundsSettings)
+	inboundsDetourConfig := conf.InboundDetourConfig{
+		Tag:      "socks-in",
+		Protocol: "socks",
+		PortList: &conf.PortList{Range: []conf.PortRange{{From: proxyPort, To: proxyPort}}},
+		ListenOn: &conf.Address{Address: xnet.IPAddress([]byte{127, 0, 0, 1})},
+		Settings: &inboundsSettingsMsg,
+	}
+
+	return inboundsDetourConfig
+}
+
+func CreateVLessOutboundDetourConfig(profile *VLess) conf.OutboundDetourConfig {
 	outboundsSettings, _ := json.Marshal(xray.OutboundsSettings{
 		Vnext: []xray.Vnext{
 			{
-				Address: profile.Add,
+				Address: profile.Address,
 				Port:    profile.Port,
 				Users: []xray.Users{
 					{

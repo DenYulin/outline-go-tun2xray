@@ -17,7 +17,6 @@ package main
 import (
 	"flag"
 	"fmt"
-	"github.com/Jigsaw-Code/outline-go-tun2socks/xray"
 	"io"
 	"os"
 	"os/signal"
@@ -60,7 +59,7 @@ var args struct {
 var version string // Populated at build time through `-X main.version=...`
 var lwipWriter io.Writer
 
-func main() {
+func main1() {
 	args.tunAddr = flag.String("tunAddr", "10.0.85.2", "TUN interface IP address")
 	args.tunGw = flag.String("tunGw", "10.0.85.1", "TUN interface gateway")
 	args.tunMask = flag.String("tunMask", "255.255.255.0", "TUN interface network mask; prefixlen for IPv6")
@@ -110,10 +109,10 @@ func main() {
 		os.Exit(connErrCode)
 	}
 
-	xray.StartXray(*args.xrayConfigFilePath, *args.checkXrayConfig)
-	if *args.checkXrayConfig {
-		os.Exit(0)
-	}
+	//xray.StartInstanceWithJson(*args.xrayConfigFilePath, *args.checkXrayConfig)
+	//if *args.checkXrayConfig {
+	//	os.Exit(0)
+	//}
 
 	// Open TUN device
 	dnsResolvers := strings.Split(*args.tunDNS, ",")

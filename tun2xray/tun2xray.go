@@ -1,4 +1,4 @@
-package outline_go_tun2xray
+package tun2xray
 
 import (
 	"bytes"
@@ -6,7 +6,6 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/Jigsaw-Code/outline-go-tun2socks/common"
 	"github.com/Jigsaw-Code/outline-go-tun2socks/features"
 	"github.com/Jigsaw-Code/outline-go-tun2socks/pool"
 	"github.com/Jigsaw-Code/outline-go-tun2socks/xray"
@@ -246,14 +245,14 @@ func LoadVLessConfig(profile *VLess) (*conf.Config, error) {
 	}
 
 	// https://github.com/Loyalsoldier/v2ray-rules-dat
-	jsonConfig.DNSConfig = common.CreateDNSConfig(profile.RouteMode, profile.DNS)
+	jsonConfig.DNSConfig = CreateDNSConfig(profile.RouteMode, profile.DNS)
 
 	// update rules
-	jsonConfig.RouterConfig = common.CreateRouterConfig(profile.RouteMode)
+	jsonConfig.RouterConfig = CreateRouterConfig(profile.RouteMode)
 
 	proxyOutboundConfig := profile.GetProxyOutboundDetourConfig()
 
-	freedomOutboundDetourConfig := common.CreateFreedomOutboundDetourConfig(profile.UseIPv6)
+	freedomOutboundDetourConfig := CreateFreedomOutboundDetourConfig(profile.UseIPv6)
 
 	if profile.RouteMode == 4 {
 		jsonConfig.OutboundConfigs = []conf.OutboundDetourConfig{
@@ -268,7 +267,7 @@ func LoadVLessConfig(profile *VLess) (*conf.Config, error) {
 	}
 
 	// policy
-	jsonConfig.Policy = common.CreatePolicyConfig()
+	jsonConfig.Policy = CreatePolicyConfig()
 	// stats
 	jsonConfig.Stats = &conf.StatsConfig{}
 	return jsonConfig, nil
@@ -276,14 +275,8 @@ func LoadVLessConfig(profile *VLess) (*conf.Config, error) {
 
 func (profile *VLess) GetProxyOutboundDetourConfig() conf.OutboundDetourConfig {
 	proxyOutboundConfig := conf.OutboundDetourConfig{}
-	//if profile.Protocol == common.VMess {
-	//    proxyOutboundConfig = createVmessOutboundDetourConfig(profile)
-	//}
-	//if profile.Protocol == common.Trojan {
-	//    proxyOutboundConfig = createTrojanOutboundDetourConfig(profile)
-	//}
-	if profile.Protocol == common.VLess {
-		proxyOutboundConfig = common.CreateVLessOutboundDetourConfig(profile)
+	if profile.Protocol == VLESS {
+		proxyOutboundConfig = CreateVLessOutboundDetourConfig(profile)
 	}
 
 	return proxyOutboundConfig

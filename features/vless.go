@@ -13,7 +13,7 @@ type VLess struct {
 	Host     string
 	Path     string
 	TLS      string
-	Add      string
+	Address  string
 	Port     int
 	Net      string
 	ID       string

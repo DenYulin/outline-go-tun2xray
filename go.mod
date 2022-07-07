@@ -8,6 +8,7 @@ require (
 	github.com/Jigsaw-Code/outline-ss-server v1.3.5
 	github.com/crazy-max/xgo v0.14.0
 	github.com/eycorsican/go-tun2socks v1.16.11
+	github.com/google/uuid v1.1.2
 	github.com/xtls/xray-core v1.5.8
 	github.com/xxf098/go-tun2socks-build v0.8.0
 	golang.org/x/mobile v0.0.0-20220518205345-8578da9835fd

@@ -7,6 +7,12 @@ type Rules struct {
 	Domain      []string `json:"domain,omitempty"`
 }
 
+type InboundsSettings struct {
+	Auth string `json:"auth"`
+	IP   string `json:"ip"`
+	UDP  bool   `json:"udp"`
+}
+
 type Users struct {
 	ID         string `json:"id"`
 	Encryption string `json:"encryption"`
