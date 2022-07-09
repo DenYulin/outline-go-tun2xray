@@ -2,7 +2,7 @@ BUILDDIR=$(CURDIR)/build
 GOBIN=$(CURDIR)/bin
 
 GOMOBILE=$(GOBIN)/gomobile
-IMPORT_PATH=github.com/Jigsaw-Code/outline-go-tun2socks
+IMPORT_PATH=github.com/DenYulin/outline-go-tun2socks
 
 .PHONY: android apple linux windows intra clean clean-all
 
