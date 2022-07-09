@@ -583,7 +583,7 @@ func TestAccept(t *testing.T) {
 	doh := newFakeTransport()
 	client, server := makePair()
 
-	// Start the forwarder running.
+	// Start the forwarder runner.
 	go Accept(doh, server)
 
 	lbuf := make([]byte, 2)
@@ -642,7 +642,7 @@ func TestAcceptFail(t *testing.T) {
 	doh := newFakeTransport()
 	client, server := makePair()
 
-	// Start the forwarder running.
+	// Start the forwarder runner.
 	go Accept(doh, server)
 
 	lbuf := make([]byte, 2)
@@ -674,7 +674,7 @@ func TestAcceptClose(t *testing.T) {
 	doh := newFakeTransport()
 	client, server := makePair()
 
-	// Start the forwarder running.
+	// Start the forwarder runner.
 	go Accept(doh, server)
 
 	lbuf := make([]byte, 2)
@@ -704,7 +704,7 @@ func TestAcceptOversize(t *testing.T) {
 	doh := newFakeTransport()
 	client, server := makePair()
 
-	// Start the forwarder running.
+	// Start the forwarder runner.
 	go Accept(doh, server)
 
 	lbuf := make([]byte, 2)

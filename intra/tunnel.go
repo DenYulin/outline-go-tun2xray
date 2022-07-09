@@ -70,7 +70,7 @@ type intratunnel struct {
 //    These will normally be localhost with a high-numbered port.
 // `dohdns` is the initial DOH transport.
 // `tunWriter` is the downstream VPN tunnel.  IntraTunnel.Disconnect() will close `tunWriter`.
-// `dialer` and `config` will be used for all network activity.
+// `dialer` and `conf` will be used for all network activity.
 // `listener` will be notified at the completion of every tunneled socket.
 func NewTunnel(fakedns string, dohdns doh.Transport, tunWriter io.WriteCloser, dialer *net.Dialer, config *net.ListenConfig, listener Listener) (Tunnel, error) {
 	if tunWriter == nil {

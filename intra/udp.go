@@ -75,7 +75,7 @@ type udpHandler struct {
 // All packets are routed directly to their destination, except packets whose
 // destination is `fakedns`.  Those packets are redirected to DOH.
 // `timeout` controls the effective NAT mapping lifetime.
-// `config` is used to bind new external UDP ports.
+// `conf` is used to bind new external UDP ports.
 // `listener` receives a summary about each UDP binding when it expires.
 func NewUDPHandler(fakedns net.UDPAddr, timeout time.Duration, config *net.ListenConfig, listener UDPListener) UDPHandler {
 	return &udpHandler{

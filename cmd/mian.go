@@ -22,13 +22,19 @@ var profile = &tun2xray.VLess{
 var vLessOptions = features.VLessOptions{
 	UseIPv6:       false, // 是否使用IPv6
 	LogLevel:      "debug",
-	RouteMode:     5,
+	RouteMode:     0,
 	DNS:           "1.1.1.1,8.8.8.8,8.8.4.4,9.9.9.9,208.67.222.222",
 	AllowInsecure: false, // 默认值 false
-	Mux:           8,     // 最大并发连接数, 默认值8，值范围为 [1, 1024]
+	Mux:           0,     // 最大并发连接数, 默认值8，值范围为 [1, 1024]
 }
 
 func main() {
 	assetPath := "/usr/local/share/xray"
-	tun2xray.StartXRayWithTunFd(1, nil, nil, profile, assetPath)
+
+	tun2xray.SetLogLevel(profile.LogLevel)
+
+	err := tun2xray.StartXRayWithTunFd(1, nil, nil, profile, assetPath)
+	if err != nil {
+		return
+	}
 }

@@ -16,9 +16,8 @@ package tun2socks
 
 import (
 	"errors"
-	"fmt"
+	"github.com/Jigsaw-Code/outline-go-tun2socks/outline/xray"
 	"io"
-	"math"
 	"runtime/debug"
 	"time"
 
@@ -49,22 +48,10 @@ func init() {
 	}()
 }
 
-// ConnectShadowsocksTunnel reads packets from a TUN device and routes it to a Shadowsocks proxy server.
-// Returns an OutlineTunnel instance that should be used to input packets to the tunnel.
-//
-// `tunWriter` is used to output packets to the TUN (VPN).
-// `host` is  IP address of the Shadowsocks proxy server.
-// `port` is the port of the Shadowsocks proxy server.
-// `password` is the password of the Shadowsocks proxy.
-// `cipher` is the encryption cipher the Shadowsocks proxy.
-// `isUDPEnabled` indicates whether the tunnel and/or network enable UDP proxying.
-//
-// Sets an error if the tunnel fails to connect.
-func ConnectShadowsocksTunnel(tunWriter TunWriter, host string, port int, password, cipher string, isUDPEnabled bool) (OutlineTunnel, error) {
+func ConnectXrayTunnel(tunWriter TunWriter, profile *xray.Profile) (OutlineTunnel, error) {
 	if tunWriter == nil {
-		return nil, errors.New("Must provide a TunWriter")
-	} else if port <= 0 || port > math.MaxUint16 {
-		return nil, fmt.Errorf("Invalid port number: %v", port)
+		return nil, errors.New("must provide a TunWriter")
 	}
-	return outline.NewTunnel(host, port, password, cipher, isUDPEnabled, tunWriter)
+
+	return xray.NewXrayTunnel(profile, tunWriter)
 }

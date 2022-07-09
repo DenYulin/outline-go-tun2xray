@@ -23,17 +23,17 @@ type VLess features.VLess
 func StartInstance(config []byte) (*core.Instance, error) {
 	jsonConfig, err := serial.DecodeJSONConfig(bytes.NewReader(config))
 	if err != nil {
-		log.Errorf("Decode json config error, error: %s", err.Error())
+		log.Errorf("Decode json conf error, error: %s", err.Error())
 		return nil, err
 	}
 	pbConfig, err := jsonConfig.Build()
 	if err != nil {
-		log.Errorf("Build protobuf config error, error: %s", err.Error())
+		log.Errorf("Build protobuf conf error, error: %s", err.Error())
 		return nil, err
 	}
 	instance, err := core.New(pbConfig)
 	if err != nil {
-		log.Errorf("Create xray instance with protobuf config error, error: %s", err.Error())
+		log.Errorf("Create xray instance with protobuf conf error, error: %s", err.Error())
 		return nil, err
 	}
 	if err = instance.Start(); err != nil {
@@ -49,8 +49,8 @@ func StartInstanceWithJson(configFilePath string) (*core.Instance, error) {
 	configFiles := cmdarg.Arg{configFilePath}
 	config, err := core.LoadConfig(JsonFormat, configFiles)
 	if err != nil {
-		log.Errorf("Load xray config error, error: %s", err.Error())
-		return nil, errors.New("failed to load config files, configFiles: " + configFiles.String())
+		log.Errorf("Load xray conf error, error: %s", err.Error())
+		return nil, errors.New("failed to load conf files, configFiles: " + configFiles.String())
 	}
 
 	{
@@ -99,10 +99,12 @@ func CreateDNSConfig(option features.VLessOptions) *conf.DNSConfig {
 func toNameServerConfig(hostPort string) *conf.NameServerConfig {
 	host, port, err := net.SplitHostPort(hostPort)
 	if err != nil {
+		log.Errorf("Split host and port error, hostPort: %s, error: %s", hostPort, err.Error())
 		return nil
 	}
 	p, err := strconv.Atoi(port)
 	if err != nil {
+		log.Errorf("The port string parse to int error, error: %s", err.Error())
 		return nil
 	}
 	newConfig := &conf.NameServerConfig{

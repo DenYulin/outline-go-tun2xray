@@ -62,7 +62,7 @@ import (
 	_ "github.com/xtls/xray-core/main/json"
 	// _ "github.com/xtls/xray-core/main/toml"
 	// _ "github.com/xtls/xray-core/main/yaml"
-	// Load config from file or http(s)
+	// Load conf from file or http(s)
 	_ "github.com/xtls/xray-core/main/confloader/external"
 	// Commands
 	// _ "github.com/xtls/xray-core/main/commands/all"

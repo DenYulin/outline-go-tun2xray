@@ -15,8 +15,7 @@
 package tun2socks
 
 import (
-	"fmt"
-	"math"
+	"github.com/Jigsaw-Code/outline-go-tun2socks/outline/xray"
 	"runtime/debug"
 
 	"github.com/Jigsaw-Code/outline-go-tun2socks/outline"
@@ -30,38 +29,22 @@ func init() {
 	log.SetLevel(log.WARN)
 }
 
-// OutlineTunnel embeds the tun2socks.OutlineTunnel interface so it gets exported by gobind.
+// OutlineTunnel embeds the tun2xray.OutlineTunnel interface so it gets exported by gobind.
 type OutlineTunnel interface {
 	outline.Tunnel
 }
 
-// ConnectShadowsocksTunnel reads packets from a TUN device and routes it to a Shadowsocks proxy server.
-// Returns an OutlineTunnel instance and does *not* take ownership of the TUN file descriptor; the
-// caller is responsible for closing after OutlineTunnel disconnects.
-//
-// `fd` is the TUN device.  The OutlineTunnel acquires an additional reference to it, which
-//     is released by OutlineTunnel.Disconnect(), so the caller must close `fd` _and_ call
-//     Disconnect() in order to close the TUN device.
-// `host` is  IP address of the Shadowsocks proxy server.
-// `port` is the port of the Shadowsocks proxy server.
-// `password` is the password of the Shadowsocks proxy.
-// `cipher` is the encryption cipher the Shadowsocks proxy.
-// `isUDPEnabled` indicates whether the tunnel and/or network enable UDP proxying.
-//
-// Throws an exception if the TUN file descriptor cannot be opened, or if the tunnel fails to
-// connect.
-func ConnectShadowsocksTunnel(fd int, host string, port int, password, cipher string, isUDPEnabled bool) (OutlineTunnel, error) {
-	if port <= 0 || port > math.MaxUint16 {
-		return nil, fmt.Errorf("Invalid port number: %v", port)
-	}
+func ConnectXrayTunnel(fd int, profile *xray.Profile) (OutlineTunnel, error) {
 	tun, err := tunnel.MakeTunFile(fd)
 	if err != nil {
 		return nil, err
 	}
-	t, err := outline.NewTunnel(host, port, password, cipher, isUDPEnabled, tun)
+
+	t, err := xray.NewXrayTunnel(profile, tun)
 	if err != nil {
 		return nil, err
 	}
+
 	go tunnel.ProcessInputPackets(t, tun)
-	return t, nil
+	return nil, nil
 }

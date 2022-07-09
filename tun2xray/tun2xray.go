@@ -21,6 +21,7 @@ import (
 	"github.com/xxf098/go-tun2socks-build/runner"
 	"io"
 	"os"
+	"strings"
 	"time"
 )
 
@@ -49,7 +50,7 @@ type PacketFlow interface {
 	WritePacket(packet []byte)
 }
 
-func startXRayInstance(profile *VLess) (*core.Instance, error) {
+func StartXRayInstanceWithVLess(profile *VLess) (*core.Instance, error) {
 	config, err := LoadVLessConfig(profile)
 	if err != nil {
 		return nil, err
@@ -62,15 +63,14 @@ func startXRayInstance(profile *VLess) (*core.Instance, error) {
 		return nil, err
 	}
 
-	fmt.Printf("Config struct deserialize to json successfully, jsonConfig: %s\n", string(jsonConfig))
 	log.Infof("Config struct deserialize to json successfully, jsonConfig: %s", string(jsonConfig))
 
 	decodeJSONConfig, err := serial.DecodeJSONConfig(bytes.NewReader(jsonConfig))
 	if err != nil {
-		log.Fatalf("Decode json config with reader error, error: %s", err.Error())
+		log.Fatalf("Decode json conf with reader error, error: %s", err.Error())
 		return nil, err
 	}
-	decodeJSONConfig.DNSConfig = xray.CreateDNSConfig(profile.VLessOptions)
+	//decodeJSONConfig.DNSConfig = xray.CreateDNSConfig(profile.VLessOptions)
 
 	pbConfig, err := decodeJSONConfig.Build()
 	if err != nil {
@@ -101,7 +101,9 @@ func StartXRay(packetFlow PacketFlow, vpnService VpnService, querySpeed QuerySpe
 	}
 
 	// Assets
-	os.Setenv("xray.location.asset", assetPath)
+	if err = os.Setenv("xray.location.asset", assetPath); err != nil {
+		return err
+	}
 
 	// Protect file descriptors of net connections in the VPN process to prevent infinite loop.
 	protectFd := func(s VpnService, fd int) error {
@@ -211,9 +213,9 @@ func StartXRayWithTunFd(tunFd int, vpnService VpnService, querySpeed QuerySpeed,
 	internet.RegisterListenerController(netCtrl)
 	t2core.SetBufferPool(bytespool.GetPool(t2core.BufSize))
 
-	xrayInstance, err = startXRayInstance(profile)
+	xrayInstance, err = StartXRayInstanceWithVLess(profile)
 	if err != nil {
-		log.Fatalf("start V instance failed: %v", err)
+		log.Fatalf("start xray instance failed: %v", err)
 		return err
 	}
 
@@ -239,7 +241,7 @@ func StartXRayWithTunFd(tunFd int, vpnService VpnService, querySpeed QuerySpeed,
 	lwipTUNDataPipeTask = runner.Go(func(shouldStop runner.S) error {
 		zeroErr := errors.New("nil")
 		tunDev.Copy(lwipWriter)
-		return zeroErr // any errors?
+		return zeroErr // any errors ?
 	})
 	updateStatusPipeTask = createUpdateStatusPipeTask(querySpeed)
 	return nil
@@ -336,4 +338,22 @@ func QueryOutboundXStats(tag string, direct string) int64 {
 
 func CheckXVersion() string {
 	return core.Version()
+}
+
+func SetLogLevel(logLevel string) {
+	// Set log level.
+	switch strings.ToLower(logLevel) {
+	case "debug":
+		log.SetLevel(log.DEBUG)
+	case "info":
+		log.SetLevel(log.INFO)
+	case "warn":
+		log.SetLevel(log.WARN)
+	case "error":
+		log.SetLevel(log.ERROR)
+	case "none":
+		log.SetLevel(log.NONE)
+	default:
+		panic("unsupported logging level")
+	}
 }
