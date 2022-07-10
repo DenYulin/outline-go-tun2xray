@@ -4,7 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"errors"
-	"github.com/Jigsaw-Code/outline-go-tun2socks/features"
+	"github.com/DenYulin/outline-go-tun2xray/features"
 	"github.com/eycorsican/go-tun2socks/common/log"
 	"github.com/xtls/xray-core/common/cmdarg"
 	xnet "github.com/xtls/xray-core/common/net"

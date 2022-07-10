@@ -2,7 +2,7 @@ package tun2xray
 
 import (
 	"encoding/json"
-	"github.com/Jigsaw-Code/outline-go-tun2socks/xray"
+	"github.com/DenYulin/outline-go-tun2xray/xray"
 	"github.com/eycorsican/go-tun2socks/common/log"
 	_ "github.com/xtls/xray-core/common"
 	xnet "github.com/xtls/xray-core/common/net"

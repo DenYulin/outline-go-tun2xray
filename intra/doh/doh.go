@@ -20,6 +20,8 @@ import (
 	"encoding/binary"
 	"errors"
 	"fmt"
+	"github.com/DenYulin/outline-go-tun2xray/intra/doh/ipmap"
+	"github.com/DenYulin/outline-go-tun2xray/intra/split"
 	"io"
 	"io/ioutil"
 	"math"
@@ -32,8 +34,6 @@ import (
 	"sync"
 	"time"
 
-	"github.com/Jigsaw-Code/outline-go-tun2socks/intra/doh/ipmap"
-	"github.com/Jigsaw-Code/outline-go-tun2socks/intra/split"
 	"github.com/eycorsican/go-tun2socks/common/log"
 	"golang.org/x/net/dns/dnsmessage"
 )

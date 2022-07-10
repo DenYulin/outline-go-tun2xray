@@ -2,9 +2,9 @@ package tunnel
 
 import (
 	"errors"
+	"github.com/eycorsican/go-tun2socks/common/log"
 	"os"
 
-	"github.com/eycorsican/go-tun2socks/common/log"
 	_ "github.com/eycorsican/go-tun2socks/common/log/simple" // Import simple log for the side effect of making logs printable.
 	"golang.org/x/sys/unix"
 )

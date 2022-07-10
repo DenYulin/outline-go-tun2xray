@@ -16,12 +16,11 @@ package tun2socks
 
 import (
 	"errors"
-	"github.com/Jigsaw-Code/outline-go-tun2socks/outline/xray"
+	"github.com/DenYulin/outline-go-tun2xray/outline"
+	"github.com/DenYulin/outline-go-tun2xray/outline/xray"
 	"io"
 	"runtime/debug"
 	"time"
-
-	"github.com/Jigsaw-Code/outline-go-tun2socks/outline"
 )
 
 // OutlineTunnel embeds the tun2socks.Tunnel interface so it gets exported by gobind.

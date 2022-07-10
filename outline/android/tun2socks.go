@@ -15,11 +15,11 @@
 package tun2socks
 
 import (
-	"github.com/Jigsaw-Code/outline-go-tun2socks/outline/xray"
+	"github.com/DenYulin/outline-go-tun2xray/outline"
+	"github.com/DenYulin/outline-go-tun2xray/outline/xray"
+	"github.com/DenYulin/outline-go-tun2xray/tunnel"
 	"runtime/debug"
 
-	"github.com/Jigsaw-Code/outline-go-tun2socks/outline"
-	"github.com/Jigsaw-Code/outline-go-tun2socks/tunnel"
 	"github.com/eycorsican/go-tun2socks/common/log"
 )
 

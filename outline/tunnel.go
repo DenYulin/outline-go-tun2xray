@@ -17,15 +17,10 @@ package outline
 import (
 	"errors"
 	"fmt"
-	"io"
-	"time"
-
-	"github.com/eycorsican/go-tun2socks/core"
-	"github.com/eycorsican/go-tun2socks/proxy/dnsfallback"
-
-	oss "github.com/Jigsaw-Code/outline-go-tun2socks/shadowsocks"
-	"github.com/Jigsaw-Code/outline-go-tun2socks/tunnel"
+	"github.com/DenYulin/outline-go-tun2xray/tunnel"
 	shadowsocks "github.com/Jigsaw-Code/outline-ss-server/client"
+	"github.com/eycorsican/go-tun2socks/core"
+	"io"
 )
 
 // Tunnel represents a tunnel from a TUN device to a server.
@@ -75,28 +70,10 @@ func NewTunnel(host string, port int, password, cipher string, isUDPEnabled bool
 }
 
 func (t *outlineTunnel) UpdateUDPSupport() bool {
-	client, err := shadowsocks.NewClient(t.host, t.port, t.password, t.cipher)
-	if err != nil {
-		return false
-	}
-	isUDPEnabled := oss.CheckUDPConnectivityWithDNS(client, shadowsocks.NewAddr("1.1.1.1:53", "udp")) == nil
-	if t.isUDPEnabled != isUDPEnabled {
-		t.isUDPEnabled = isUDPEnabled
-		t.lwipStack.Close() // Close existing connections to avoid using the previous handlers.
-		t.registerConnectionHandlers()
-	}
-	return isUDPEnabled
+	return true
 }
 
 // Registers UDP and TCP Shadowsocks connection handlers to the tunnel's host and port.
 // Registers a DNS/TCP fallback UDP handler when UDP is disabled.
 func (t *outlineTunnel) registerConnectionHandlers() {
-	var udpHandler core.UDPConnHandler
-	if t.isUDPEnabled {
-		udpHandler = oss.NewUDPHandler(t.host, t.port, t.password, t.cipher, 30*time.Second)
-	} else {
-		udpHandler = dnsfallback.NewUDPHandler()
-	}
-	core.RegisterTCPConnHandler(oss.NewTCPHandler(t.host, t.port, t.password, t.cipher))
-	core.RegisterUDPConnHandler(udpHandler)
 }

@@ -1,4 +1,4 @@
-module github.com/Jigsaw-Code/outline-go-tun2socks
+module github.com/DenYulin/outline-go-tun2xray
 
 go 1.18
 

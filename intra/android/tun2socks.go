@@ -15,13 +15,13 @@
 package tun2socks
 
 import (
+	"github.com/DenYulin/outline-go-tun2xray/intra"
+	"github.com/DenYulin/outline-go-tun2xray/intra/doh"
+	"github.com/DenYulin/outline-go-tun2xray/intra/protect"
+	"github.com/DenYulin/outline-go-tun2xray/tunnel"
 	"runtime/debug"
 	"strings"
 
-	"github.com/Jigsaw-Code/outline-go-tun2socks/intra"
-	"github.com/Jigsaw-Code/outline-go-tun2socks/intra/doh"
-	"github.com/Jigsaw-Code/outline-go-tun2socks/intra/protect"
-	"github.com/Jigsaw-Code/outline-go-tun2socks/tunnel"
 	"github.com/eycorsican/go-tun2socks/common/log"
 )
 
@@ -48,14 +48,14 @@ func init() {
 //
 // Throws an exception if the TUN file descriptor cannot be opened, or if the tunnel fails to
 // connect.
-func ConnectIntraTunnel(fd int, fakedns string, dohdns doh.Transport, protector protect.Protector, listener intra.Listener) (intra.Tunnel, error) {
+func ConnectIntraTunnel(fd int, fakeDns string, dohDns doh.Transport, protector protect.Protector, listener intra.Listener) (intra.Tunnel, error) {
 	tun, err := tunnel.MakeTunFile(fd)
 	if err != nil {
 		return nil, err
 	}
 	dialer := protect.MakeDialer(protector)
 	config := protect.MakeListenConfig(protector)
-	t, err := intra.NewTunnel(fakedns, dohdns, tun, dialer, config, listener)
+	t, err := intra.NewTunnel(fakeDns, dohDns, tun, dialer, config, listener)
 	if err != nil {
 		return nil, err
 	}

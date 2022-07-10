@@ -16,6 +16,8 @@ package intra
 
 import (
 	"errors"
+	"github.com/DenYulin/outline-go-tun2xray/intra/doh"
+	"github.com/DenYulin/outline-go-tun2xray/tunnel"
 	"io"
 	"net"
 	"os"
@@ -23,9 +25,6 @@ import (
 	"time"
 
 	"github.com/eycorsican/go-tun2socks/core"
-
-	"github.com/Jigsaw-Code/outline-go-tun2socks/intra/doh"
-	"github.com/Jigsaw-Code/outline-go-tun2socks/tunnel"
 )
 
 // Listener receives usage statistics when a UDP or TCP socket is closed,

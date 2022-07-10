@@ -1,8 +1,8 @@
 package main
 
 import (
-	"github.com/Jigsaw-Code/outline-go-tun2socks/features"
-	"github.com/Jigsaw-Code/outline-go-tun2socks/tun2xray"
+	"github.com/DenYulin/outline-go-tun2xray/features"
+	"github.com/DenYulin/outline-go-tun2xray/tun2xray"
 )
 
 var profile = &tun2xray.VLess{

@@ -18,11 +18,10 @@ import (
 	"crypto/tls"
 	"flag"
 	"fmt"
+	"github.com/DenYulin/outline-go-tun2xray/intra/split"
 	"log"
 	"net"
 	"os"
-
-	"github.com/Jigsaw-Code/outline-go-tun2socks/intra/split"
 )
 
 func main() {

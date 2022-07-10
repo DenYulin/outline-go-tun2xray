@@ -15,8 +15,16 @@
 package main
 
 import (
+	"context"
 	"flag"
 	"fmt"
+	xrayTunnel "github.com/DenYulin/outline-go-tun2xray/outline/xray"
+	"github.com/DenYulin/outline-go-tun2xray/xray"
+	"github.com/eycorsican/go-tun2socks/core"
+	"github.com/eycorsican/go-tun2socks/tun"
+	"github.com/xtls/xray-core/common/session"
+	"github.com/xtls/xray-core/common/uuid"
+	x2core "github.com/xtls/xray-core/core"
 	"io"
 	"os"
 	"os/signal"
@@ -24,13 +32,8 @@ import (
 	"syscall"
 	"time"
 
-	oss "github.com/Jigsaw-Code/outline-go-tun2socks/outline/shadowsocks"
-	"github.com/Jigsaw-Code/outline-go-tun2socks/shadowsocks"
 	"github.com/eycorsican/go-tun2socks/common/log"
 	_ "github.com/eycorsican/go-tun2socks/common/log/simple" // Register a simple logger.
-	"github.com/eycorsican/go-tun2socks/core"
-	"github.com/eycorsican/go-tun2socks/proxy/dnsfallback"
-	"github.com/eycorsican/go-tun2socks/tun"
 )
 
 const (
@@ -40,113 +43,126 @@ const (
 )
 
 var args struct {
-	tunAddr            *string
-	tunGw              *string
-	tunMask            *string
-	tunName            *string
-	tunDNS             *string
-	xrayConfigFilePath *string
-	checkXrayConfig    *bool
-	proxyHost          *string
-	proxyPort          *int
-	proxyPassword      *string
-	proxyCipher        *string
-	logLevel           *string
-	checkConnectivity  *bool
-	dnsFallback        *bool
-	version            *bool
+	tunAddr          *string // tun虚拟设备地址
+	tunGw            *string // tun虚拟设备网关
+	tunMask          *string // tun虚拟设备地址掩码
+	tunName          *string // tun虚拟设备名称，默认都是从 tun0 起。
+	tunDNS           *string // tun虚拟设备DNS
+	configFormat     *string // 配置格式，json: xray json文件，param: 命令行参数模式
+	configFilePath   *string // 配置文件绝对路径
+	checkXrayConfig  *bool   // 是否在检查xray配置是否合规
+	host             *string // 底层传输方式配置中的 host，和
+	path             *string // 底层传输方式配置中的 path or key 路径，默认值为 ["/"]。当有多个值时，每次请求随机选择一个值。
+	security         *string // 是否启用传输层加密，none: 不加密，tls: 使用tls加密，xtls: 使用tls加密
+	serverAddress    *string // 服务器地址，出站Outbound的Address，指向服务端，支持域名、IPv4、IPv6。
+	serverPort       *int    // 服务端端口，通常与服务端监听的端口相同
+	net              *string // 底层传输方式，HTTP/2、TCP、WebSocket、QUIC、mKCP、ds、gRPC
+	id               *string // VLESS/VMESS 的用户 ID，可以是任意小于 30 字节的字符串, 也可以是一个合法的 UUID.
+	flow             *string // 流控模式，用于选择 XTLS 的算法。
+	headerType       *string // 数据包头部伪装设置
+	outboundProtocol *string // 出站协议类型
+	useIPv6          *bool   // 在 Freedom 出站协议中，是否使用IPv6，
+	logLevel         *string // 日志级别
+	routeMode        *int    // 路由模式
+	dns              *string // DNS 地址
+	allowInsecure    *bool   // 是否允许不安全连接（仅用于客户端）。默认值为 false。 当值为 true 时，Xray 不会检查远端主机所提供的 TLS 证书的有效性。
+	mux              *int    // 是否开启 Mux 功能。mux <= 0 不开启；mux > 0 开启，并且设置最大并发连接数为 mux
+	assetPath        *string // xray.location.assetPath
+	version          *bool   // 输出版本号
 }
+
 var version string // Populated at build time through `-X main.version=...`
 var lwipWriter io.Writer
+var tunDevice io.ReadWriteCloser
+var xrayClient *x2core.Instance
+var err error
 
-func main1() {
+func main() {
 	args.tunAddr = flag.String("tunAddr", "10.0.85.2", "TUN interface IP address")
 	args.tunGw = flag.String("tunGw", "10.0.85.1", "TUN interface gateway")
 	args.tunMask = flag.String("tunMask", "255.255.255.0", "TUN interface network mask; prefixlen for IPv6")
 	args.tunDNS = flag.String("tunDNS", "1.1.1.1,9.9.9.9,208.67.222.222", "Comma-separated list of DNS resolvers for the TUN interface (Windows only)")
 	args.tunName = flag.String("tunName", "tun0", "TUN interface name")
-	args.xrayConfigFilePath = flag.String("xrayConfigFilePath", "conf.json", "The xray client conf file path in system")
+	args.configFormat = flag.String("configFormat", "json", "")
+	args.configFilePath = flag.String("xrayConfigFilePath", "./conf.json", "The xray client conf file path in system")
 	args.checkXrayConfig = flag.Bool("checkXrayConfig", false, "Test xray conf file only, without launching Xray client.")
-	args.proxyHost = flag.String("proxyHost", "127.0.0.1", "Shadowsocks proxy hostname or IP address")
-	args.proxyPort = flag.Int("proxyPort", 10800, "Shadowsocks proxy port number")
-	args.proxyPassword = flag.String("proxyPassword", "password", "Shadowsocks proxy password")
-	args.proxyCipher = flag.String("proxyCipher", "chacha20-ietf-poly1305", "Shadowsocks proxy encryption cipher")
+	args.host = flag.String("host", "127.0.0.1", "Transport config host")
+	args.path = flag.String("path", "/", "Transport config path")
+	args.security = flag.String("security", "none", "Transport Layer Encryption")
+	args.serverAddress = flag.String("serverAddress", "127.0.0.1", "Server address")
+	args.serverPort = flag.Int("serverPort", 443, "Server port")
+	args.net = flag.String("net", "tcp", "transport method")
+	args.id = flag.String("id", getUuid(), "VLess/VMess user id")
+	args.flow = flag.String("flow", "xtls-rprx-direct", "Flow control mode")
+	args.headerType = flag.String("headerType", "none", "Packet header masquerading settings")
+	args.outboundProtocol = flag.String("outboundProtocol", "vless", "Outbound protocol type")
+	args.useIPv6 = flag.Bool("useIPv6", false, "In freedom protocol, is use ipv6")
 	args.logLevel = flag.String("logLevel", "info", "Logging level: debug|info|warn|error|none")
-	args.dnsFallback = flag.Bool("dnsFallback", false, "Enable DNS fallback over TCP (overrides the UDP handler).")
-	args.checkConnectivity = flag.Bool("checkConnectivity", false, "Check the proxy TCP and UDP connectivity and exit.")
+	args.routeMode = flag.Int("routeMode", 0, "Route config mode")
+	args.dns = flag.String("dns", "223.5.5.5,114.114.114.114,8.8.88,1.1.1.1", "Dns address")
+	args.allowInsecure = flag.Bool("allowInsecure", false, "Is allow insecure")
+	args.mux = flag.Int("mux", -1, "Is use mux and maximum number of concurrency")
+	args.assetPath = flag.String("assetPath", "", "The xray param value of xray.location.assetPath")
 	args.version = flag.Bool("version", false, "Print the version and exit.")
-
 	flag.Parse()
+
+	setLogLevel(*args.logLevel)
 
 	if *args.version {
 		fmt.Println(version)
 		os.Exit(0)
 	}
 
-	setLogLevel(*args.logLevel)
-
-	// Validate proxy flags
-	if *args.proxyHost == "" {
-		log.Errorf("Must provide a Shadowsocks proxy host name or IP address")
-		os.Exit(oss.IllegalConfiguration)
-	} else if *args.proxyPort <= 0 || *args.proxyPort > 65535 {
-		log.Errorf("Must provide a valid Shadowsocks proxy port [1:65535]")
-		os.Exit(oss.IllegalConfiguration)
-	} else if *args.proxyPassword == "" {
-		log.Errorf("Must provide a Shadowsocks proxy password")
-		os.Exit(oss.IllegalConfiguration)
-	} else if *args.proxyCipher == "" {
-		log.Errorf("Must provide a Shadowsocks proxy encryption cipher")
-		os.Exit(oss.IllegalConfiguration)
-	}
-
-	if *args.checkConnectivity {
-		connErrCode, err := oss.CheckConnectivity(*args.proxyHost, *args.proxyPort, *args.proxyPassword, *args.proxyCipher)
-		log.Debugf("Connectivity checks error code: %v", connErrCode)
-		if err != nil {
-			log.Errorf("Failed to perform connectivity checks: %v", err)
+	if *args.configFormat == "json" {
+		if *args.configFilePath == "" {
+			log.Errorf("Must provide a xray config file of json when configFormat is set to json")
+			os.Exit(JsonXrayConfigFileNotExist)
+		} else {
+			if !fileExists(*args.configFilePath) {
+				log.Errorf("The xray config file of json is not exist, configFilePath: %s", *args.configFilePath)
+				os.Exit(JsonXrayConfigFileNotExist)
+			}
 		}
-		os.Exit(connErrCode)
+		if xrayClient, err = xray.StartInstanceWithJson(*args.configFilePath); err != nil {
+			log.Errorf("Failed to start up xray client with json, error: %s", err.Error())
+			os.Exit(StartUpXrayClientFailure)
+		}
+	} else if *args.configFormat == "param" {
+		profile := toXrayProfile()
+		xrayClient, err = xrayTunnel.CreateXrayClient(profile)
+		log.Errorf("Failed to start up xray client with param profile, error: %s", err.Error())
 	}
 
-	//xray.StartInstanceWithJson(*args.xrayConfigFilePath, *args.checkXrayConfig)
-	//if *args.checkXrayConfig {
-	//	os.Exit(0)
-	//}
+	ctx := context.Background()
+	content := session.ContentFromContext(ctx)
+	if content == nil {
+		content = new(session.Content)
+		ctx = session.ContextWithContent(ctx, content)
+	}
 
-	// Open TUN device
-	dnsResolvers := strings.Split(*args.tunDNS, ",")
-	tunDevice, err := tun.OpenTunDevice(*args.tunName, *args.tunAddr, *args.tunGw, *args.tunMask, dnsResolvers, persistTun)
+	tunDnsServers := strings.Split(*args.tunDNS, ",")
+	tunDevice, err = tun.OpenTunDevice(*args.tunName, *args.tunAddr, *args.tunGw, *args.tunMask, tunDnsServers, persistTun)
 	if err != nil {
-		log.Errorf("Failed to open TUN device: %v", err)
-		os.Exit(oss.SystemMisconfigured)
+		log.Errorf("Failed to open TUN device, error: %s", err.Error())
+		os.Exit(OpenTunFailure)
 	}
-	// Output packets to TUN device
+
 	core.RegisterOutputFn(tunDevice.Write)
 
-	// Register TCP and UDP connection handlers
-	core.RegisterTCPConnHandler(
-		shadowsocks.NewTCPHandler(*args.proxyHost, *args.proxyPort, *args.proxyPassword, *args.proxyCipher))
-	if *args.dnsFallback {
-		// UDP connectivity not supported, fall back to DNS over TCP.
-		log.Debugf("Registering DNS fallback UDP handler")
-		core.RegisterUDPConnHandler(dnsfallback.NewUDPHandler())
-	} else {
-		core.RegisterUDPConnHandler(
-			shadowsocks.NewUDPHandler(*args.proxyHost, *args.proxyPort, *args.proxyPassword, *args.proxyCipher, udpTimeout))
-	}
+	core.RegisterTCPConnHandler(xray.NewTCPHandler(ctx, xrayClient))
+	core.RegisterUDPConnHandler(xray.NewUDPHandler(ctx, xrayClient, udpTimeout))
 
-	// Configure LWIP stack to receive input data from the TUN device
 	lwipWriter = core.NewLWIPStack()
+
 	go func() {
 		_, err = io.CopyBuffer(lwipWriter, tunDevice, make([]byte, mtu))
 		if err != nil {
 			log.Errorf("Failed to write data to network stack: %v", err)
-			os.Exit(oss.Unexpected)
+			os.Exit(CopyDataToTunDeviceFailure)
 		}
 	}()
 
-	log.Infof("tun2socks runner...")
+	log.Infof("tun2xray runner...")
 
 	osSignals := make(chan os.Signal, 1)
 	signal.Notify(osSignals, os.Interrupt, os.Kill, syscall.SIGTERM, syscall.SIGHUP)
@@ -169,4 +185,9 @@ func setLogLevel(level string) {
 	default:
 		log.SetLevel(log.INFO)
 	}
+}
+
+func getUuid() string {
+	u := uuid.New()
+	return u.String()
 }
