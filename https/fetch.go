@@ -54,11 +54,11 @@ type Response struct {
 // Returns an error if req.URL is a non-HTTPS URL, if there is a connection
 // error to the server, or if reading the response fails.
 func Fetch(req Request) (*Response, error) {
-	httpreq, err := http.NewRequest(req.Method, req.URL, nil)
+	request, err := http.NewRequest(req.Method, req.URL, nil)
 	if err != nil {
 		return nil, err
 	}
-	if httpreq.URL.Scheme != "https" {
+	if request.URL.Scheme != "https" {
 		return nil, errors.New("URL protocol must be HTTPs")
 	}
 
@@ -83,13 +83,13 @@ func Fetch(req Request) (*Response, error) {
 		}
 	}
 
-	httpres, err := client.Do(httpreq)
+	response, err := client.Do(request)
 	if err != nil {
 		return nil, err
 	}
-	res := &Response{nil, httpres.StatusCode, redirectURL}
-	res.Data, err = ioutil.ReadAll(httpres.Body)
-	httpres.Body.Close()
+	res := &Response{nil, response.StatusCode, redirectURL}
+	res.Data, err = ioutil.ReadAll(response.Body)
+	response.Body.Close()
 	return res, err
 }
 

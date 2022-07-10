@@ -130,7 +130,10 @@ func main() {
 	} else if *args.configFormat == "param" {
 		profile := toXrayProfile()
 		xrayClient, err = xrayTunnel.CreateXrayClient(profile)
-		log.Errorf("Failed to start up xray client with param profile, error: %s", err.Error())
+		if err != nil {
+			log.Errorf("Failed to start up xray client with param profile, error: %s", err.Error())
+			os.Exit(StartUpXrayClientFailure)
+		}
 	}
 
 	ctx := context.Background()
