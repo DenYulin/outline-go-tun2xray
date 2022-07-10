@@ -22,7 +22,7 @@ type Users struct {
 
 type Vnext struct {
 	Address string  `json:"address"`
-	Port    int     `json:"port"`
+	Port    uint32  `json:"port"`
 	Users   []Users `json:"users"`
 }
 

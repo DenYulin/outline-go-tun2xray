@@ -258,6 +258,10 @@ func LoadVLessConfig(profile *VLess) (*conf.Config, error) {
 
 	// update rules
 	jsonConfig.RouterConfig = CreateRouterConfig(profile.RouteMode)
+	jsonConfig.InboundConfigs = []conf.InboundDetourConfig{
+		//CreateDokodemoDoorInboundDetourConfig(profile.Port),
+		CreateSocks5InboundDetourConfig(profile.Port),
+	}
 
 	proxyOutboundConfig := profile.GetProxyOutboundDetourConfig()
 
@@ -280,6 +284,18 @@ func LoadVLessConfig(profile *VLess) (*conf.Config, error) {
 	// stats
 	jsonConfig.Stats = &conf.StatsConfig{}
 	return jsonConfig, nil
+}
+
+func GetProxyInboundDetourConfig(proxyPort uint32, protocol string) conf.InboundDetourConfig {
+	proxyInboundConfig := conf.InboundDetourConfig{}
+
+	if protocol == SOCKS {
+		proxyInboundConfig = CreateSocks5InboundDetourConfig(proxyPort)
+	} else if protocol == DOKODEMO_DOOR {
+		proxyInboundConfig = CreateDokodemoDoorInboundDetourConfig(proxyPort)
+	}
+
+	return proxyInboundConfig
 }
 
 func (profile *VLess) GetProxyOutboundDetourConfig() conf.OutboundDetourConfig {

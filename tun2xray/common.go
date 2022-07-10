@@ -3,6 +3,7 @@ package tun2xray
 import (
 	"encoding/json"
 	"github.com/DenYulin/outline-go-tun2xray/xray"
+	"github.com/DenYulin/outline-go-tun2xray/xray/DokodemoDoor"
 	"github.com/eycorsican/go-tun2socks/common/log"
 	_ "github.com/xtls/xray-core/common"
 	xnet "github.com/xtls/xray-core/common/net"
@@ -16,7 +17,9 @@ import (
 const SeparatorComma = ","
 
 const (
-	VLESS string = "vless"
+	DOKODEMO_DOOR        = "dokodemo-door"
+	SOCKS         string = "socks"
+	VLESS         string = "vless"
 )
 
 func CreateDNSConfig(routeMode int, dnsConf string) *conf.DNSConfig {
@@ -60,7 +63,29 @@ func toNameServerConfig(hostPort string) *conf.NameServerConfig {
 	return newConfig
 }
 
-func CreateInboundDetourConfig(proxyPort uint32) conf.InboundDetourConfig {
+func CreateDokodemoDoorInboundDetourConfig(proxyPort uint32) conf.InboundDetourConfig {
+	inboundsSettings, _ := json.Marshal(DokodemoDoor.InboundsSettings{
+		Address:        "127.0.0.1",
+		Port:           proxyPort,
+		Network:        "tcp,udp",
+		Timeout:        300,
+		FollowRedirect: false,
+		UserLevel:      0,
+	})
+
+	inboundsSettingsMsg := json.RawMessage(inboundsSettings)
+	inboundsDetourConfig := conf.InboundDetourConfig{
+		Tag:      "transparent",
+		Protocol: "dokodemo-door",
+		PortList: &conf.PortList{Range: []conf.PortRange{{From: proxyPort, To: proxyPort}}},
+		ListenOn: &conf.Address{Address: xnet.IPAddress([]byte{127, 0, 0, 1})},
+		Settings: &inboundsSettingsMsg,
+	}
+
+	return inboundsDetourConfig
+}
+
+func CreateSocks5InboundDetourConfig(proxyPort uint32) conf.InboundDetourConfig {
 	inboundsSettings, _ := json.Marshal(xray.InboundsSettings{
 		Auth: "noauth",
 		IP:   "127.0.0.1",
