@@ -5,7 +5,6 @@ go 1.18
 require (
 	github.com/Jigsaw-Code/choir v1.0.1
 	github.com/Jigsaw-Code/getsni v0.0.0-20190807203514-efe2dbf35d1f
-	github.com/Jigsaw-Code/outline-ss-server v1.3.5
 	github.com/crazy-max/xgo v0.14.0
 	github.com/eycorsican/go-tun2socks v1.16.11
 	github.com/xtls/xray-core v1.5.8
@@ -38,7 +37,6 @@ require (
 	github.com/sagernet/sing v0.0.0-20220619130320-8793fe5e067d // indirect
 	github.com/sagernet/sing-shadowsocks v0.0.0-20220619134218-830a2f478eb1 // indirect
 	github.com/seiflotfy/cuckoofilter v0.0.0-20220411075957-e3b120b3f5fb // indirect
-	github.com/shadowsocks/go-shadowsocks2 v0.1.4-0.20201002022019-75d43273f5a5 // indirect
 	github.com/songgao/water v0.0.0-20200317203138-2b4b6d7c09d8 // indirect
 	github.com/v2fly/ss-bloomring v0.0.0-20210312155135-28617310f63e // indirect
 	github.com/xtls/go v0.0.0-20210920065950-d4af136d3672 // indirect
@@ -51,8 +49,8 @@ require (
 	google.golang.org/genproto v0.0.0-20220527130721-00d5c0f3be58 // indirect
 	google.golang.org/grpc v1.47.0 // indirect
 	google.golang.org/protobuf v1.28.0 // indirect
+	gopkg.in/check.v1 v1.0.0-20190902080502-41f04d3bba15 // indirect
 	gopkg.in/tomb.v1 v1.0.0-20141024135613-dd632973f1e7 // indirect
 	gopkg.in/yaml.v2 v2.4.0 // indirect
 	lukechampine.com/blake3 v1.1.7 // indirect
-	v2ray.com/core v4.19.1+incompatible // indirect
 )

@@ -3,6 +3,7 @@ package xray
 import (
 	"context"
 	"fmt"
+	"github.com/DenYulin/outline-go-tun2xray/pool"
 	"github.com/xtls/xray-core/common/bytespool"
 	"github.com/xtls/xray-core/common/session"
 	"github.com/xtls/xray-core/core"
@@ -11,8 +12,6 @@ import (
 
 	t2core "github.com/eycorsican/go-tun2socks/core"
 	x2net "github.com/xtls/xray-core/common/net"
-
-	"github.com/xxf098/go-tun2socks-build/pool"
 )
 
 type tcpHandler struct {

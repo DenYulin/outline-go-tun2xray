@@ -74,7 +74,6 @@ func StartXRayInstanceWithVLess(profile *VLess) (*core.Instance, error) {
 
 	pbConfig, err := decodeJSONConfig.Build()
 	if err != nil {
-		fmt.Printf("Execute decodeJsonConfig.build error, error: %s\n", err.Error())
 		log.Fatalf("Execute decodeJSONConfig.build error, error: %s", err.Error())
 		return nil, err
 	}
@@ -263,6 +262,11 @@ func LoadVLessConfig(profile *VLess) (*conf.Config, error) {
 		CreateSocks5InboundDetourConfig(profile.Port),
 	}
 
+	proxyInboundConfig := GetProxyInboundDetourConfig(profile.Port, SOCKS)
+	jsonConfig.InboundConfigs = []conf.InboundDetourConfig{
+		proxyInboundConfig,
+	}
+
 	proxyOutboundConfig := profile.GetProxyOutboundDetourConfig()
 
 	freedomOutboundDetourConfig := CreateFreedomOutboundDetourConfig(profile.UseIPv6)
@@ -329,7 +333,6 @@ func createUpdateStatusPipeTask(querySpeed QuerySpeed) *runner.Task {
 	})
 }
 
-// QueryOutboundStats add in v2ray-core v4.26.0
 func QueryOutboundStats(tag string, direct string) int64 {
 	if statsManager == nil {
 		return QueryOutboundXStats(tag, direct)
@@ -352,7 +355,7 @@ func QueryOutboundXStats(tag string, direct string) int64 {
 	return counter.Set(0)
 }
 
-func CheckXVersion() string {
+func CheckXRayVersion() string {
 	return core.Version()
 }
 

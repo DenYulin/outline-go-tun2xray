@@ -8,7 +8,6 @@ import (
 	_ "github.com/xtls/xray-core/common"
 	xnet "github.com/xtls/xray-core/common/net"
 	"github.com/xtls/xray-core/infra/conf"
-	"github.com/xxf098/go-tun2socks-build/v2ray"
 	"net"
 	"strconv"
 	"strings"
@@ -324,7 +323,7 @@ func CreateRouterConfig(routeMode int) *conf.RouterConfig {
 	blockDomain, _ := json.Marshal(xray.Rules{
 		Type:        "field",
 		OutboundTag: "blocked",
-		Domain:      v2ray.BlockDomains,
+		Domain:      xray.BlockDomains,
 	})
 	directDomains, _ := json.Marshal(xray.Rules{
 		Type:        "field",

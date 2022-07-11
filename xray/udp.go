@@ -30,7 +30,7 @@ type udpHandler struct {
 	ctx     context.Context
 	v       *core.Instance
 	connMap map[t2core.UDPConn]*udpConnEntry
-	timeout time.Duration // Maybe override by V2Ray local policies for some connMap.
+	timeout time.Duration
 }
 
 func NewUDPHandler(ctx context.Context, instance *core.Instance, timeout time.Duration) t2core.UDPConnHandler {

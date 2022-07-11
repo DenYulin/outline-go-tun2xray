@@ -19,6 +19,7 @@ import (
 	"flag"
 	"fmt"
 	xrayTunnel "github.com/DenYulin/outline-go-tun2xray/outline/xray"
+	"github.com/DenYulin/outline-go-tun2xray/tun2xray"
 	"github.com/DenYulin/outline-go-tun2xray/xray"
 	"github.com/eycorsican/go-tun2socks/core"
 	"github.com/eycorsican/go-tun2socks/tun"
@@ -55,7 +56,7 @@ var args struct {
 	path             *string // 底层传输方式配置中的 path or key 路径，默认值为 ["/"]。当有多个值时，每次请求随机选择一个值。
 	security         *string // 是否启用传输层加密，none: 不加密，tls: 使用tls加密，xtls: 使用tls加密
 	serverAddress    *string // 服务器地址，出站Outbound的Address，指向服务端，支持域名、IPv4、IPv6。
-	serverPort       *int    // 服务端端口，通常与服务端监听的端口相同
+	serverPort       *uint64 // 服务端端口，通常与服务端监听的端口相同
 	net              *string // 底层传输方式，HTTP/2、TCP、WebSocket、QUIC、mKCP、ds、gRPC
 	id               *string // VLESS/VMESS 的用户 ID，可以是任意小于 30 字节的字符串, 也可以是一个合法的 UUID.
 	flow             *string // 流控模式，用于选择 XTLS 的算法。
@@ -90,7 +91,7 @@ func main() {
 	args.path = flag.String("path", "/", "Transport config path")
 	args.security = flag.String("security", "none", "Transport Layer Encryption")
 	args.serverAddress = flag.String("serverAddress", "127.0.0.1", "Server address")
-	args.serverPort = flag.Int("serverPort", 443, "Server port")
+	args.serverPort = flag.Uint64("serverPort", 443, "Server port")
 	args.net = flag.String("net", "tcp", "transport method")
 	args.id = flag.String("id", getUuid(), "VLess/VMess user id")
 	args.flow = flag.String("flow", "xtls-rprx-direct", "Flow control mode")
@@ -109,6 +110,7 @@ func main() {
 	setLogLevel(*args.logLevel)
 
 	if *args.version {
+		version = tun2xray.CheckXRayVersion()
 		fmt.Println(version)
 		os.Exit(0)
 	}

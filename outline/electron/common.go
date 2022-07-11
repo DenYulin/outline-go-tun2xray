@@ -25,7 +25,7 @@ func toXrayProfile() *xray.Profile {
 		Path:             *args.path,
 		TLS:              *args.security,
 		Address:          *args.serverAddress,
-		Port:             *args.serverPort,
+		Port:             uint32(*args.serverPort),
 		Net:              *args.net,
 		ID:               *args.id,
 		Flow:             *args.flow,

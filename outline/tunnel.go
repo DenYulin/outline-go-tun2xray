@@ -15,12 +15,8 @@
 package outline
 
 import (
-	"errors"
-	"fmt"
 	"github.com/DenYulin/outline-go-tun2xray/tunnel"
-	shadowsocks "github.com/Jigsaw-Code/outline-ss-server/client"
 	"github.com/eycorsican/go-tun2socks/core"
-	"io"
 )
 
 // Tunnel represents a tunnel from a TUN device to a server.
@@ -51,23 +47,20 @@ type outlineTunnel struct {
 // `cipher` is the encryption cipher used by the Shadowsocks proxy.
 // `isUDPEnabled` indicates if the Shadowsocks proxy and the network support proxying UDP traffic.
 // `tunWriter` is used to output packets back to the TUN device.  OutlineTunnel.Disconnect() will close `tunWriter`.
-func NewTunnel(host string, port int, password, cipher string, isUDPEnabled bool, tunWriter io.WriteCloser) (Tunnel, error) {
-	if tunWriter == nil {
-		return nil, errors.New("must provide a TUN writer")
-	}
-	_, err := shadowsocks.NewClient(host, port, password, cipher)
-	if err != nil {
-		return nil, fmt.Errorf("invalid Shadowsocks proxy parameters: %v", err.Error())
-	}
-	core.RegisterOutputFn(func(data []byte) (int, error) {
-		return tunWriter.Write(data)
-	})
-	lwipStack := core.NewLWIPStack()
-	base := tunnel.NewTunnel(tunWriter, lwipStack)
-	t := &outlineTunnel{base, lwipStack, host, port, password, cipher, isUDPEnabled}
-	t.registerConnectionHandlers()
-	return t, nil
-}
+//func NewTunnel(host string, port int, password, cipher string, isUDPEnabled bool, tunWriter io.WriteCloser) (Tunnel, error) {
+//if tunWriter == nil {
+//	return nil, errors.New("must provide a TUN writer")
+//}
+//
+//core.RegisterOutputFn(func(data []byte) (int, error) {
+//	return tunWriter.Write(data)
+//})
+//lwipStack := core.NewLWIPStack()
+//base := tunnel.NewTunnel(tunWriter, lwipStack)
+//t := &outlineTunnel{base, lwipStack, host, port, password, cipher, isUDPEnabled}
+//t.registerConnectionHandlers()
+//return t, nil
+//}
 
 func (t *outlineTunnel) UpdateUDPSupport() bool {
 	return true
