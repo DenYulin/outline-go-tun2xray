@@ -23,7 +23,7 @@ type Profile struct {
 	Path             string
 	TLS              string
 	Address          string
-	Port             int
+	Port             uint32
 	Net              string
 	ID               string
 	Flow             string
