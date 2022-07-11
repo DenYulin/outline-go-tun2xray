@@ -101,6 +101,7 @@ func StartXRay(packetFlow PacketFlow, vpnService VpnService, querySpeed QuerySpe
 
 	// Assets
 	if err = os.Setenv("xray.location.asset", assetPath); err != nil {
+		log.Errorf("Set system environment variable [xray.location.asset] error，error:%s", err.Error())
 		return err
 	}
 
@@ -115,13 +116,19 @@ func StartXRay(packetFlow PacketFlow, vpnService VpnService, querySpeed QuerySpe
 	netCtrl := func(network, address string, fd uintptr) error {
 		return protectFd(vpnService, int(fd))
 	}
-	internet.RegisterDialerController(netCtrl)
-	internet.RegisterListenerController(netCtrl)
+	if err = internet.RegisterDialerController(netCtrl); err != nil {
+		log.Errorf("Register dialer controller error, error: %s", err.Error())
+		return err
+	}
+	if err = internet.RegisterListenerController(netCtrl); err != nil {
+		log.Errorf("Register listener controller error, error: %s", err.Error())
+		return err
+	}
 
 	t2core.SetBufferPool(bytespool.GetPool(t2core.BufSize))
 
 	// Start the V2Ray instance.
-	xrayInstance, err := xray.StartInstance(configBytes)
+	xrayInstance, err = xray.StartInstance(configBytes)
 	if err != nil {
 		log.Errorf("Start xray instance failed: %v", err)
 		return err
@@ -185,6 +192,7 @@ func StartXRayWithTunFd(tunFd int, vpnService VpnService, querySpeed QuerySpeed,
 	tunDev, err = pool.OpenTunDevice(tunFd)
 	if err != nil {
 		log.Fatalf("failed to open tun device: %v", err)
+		return err
 	}
 
 	if lwipStack != nil {
@@ -262,10 +270,10 @@ func LoadVLessConfig(profile *VLess) (*conf.Config, error) {
 		CreateSocks5InboundDetourConfig(profile.Port),
 	}
 
-	proxyInboundConfig := GetProxyInboundDetourConfig(profile.Port, SOCKS)
-	jsonConfig.InboundConfigs = []conf.InboundDetourConfig{
-		proxyInboundConfig,
-	}
+	//proxyInboundConfig := GetProxyInboundDetourConfig(profile.Port, SOCKS)
+	//jsonConfig.InboundConfigs = []conf.InboundDetourConfig{
+	//	proxyInboundConfig,
+	//}
 
 	proxyOutboundConfig := profile.GetProxyOutboundDetourConfig()
 

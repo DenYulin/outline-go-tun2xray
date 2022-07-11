@@ -100,10 +100,10 @@ func main() {
 	args.useIPv6 = flag.Bool("useIPv6", false, "In freedom protocol, is use ipv6")
 	args.logLevel = flag.String("logLevel", "info", "Logging level: debug|info|warn|error|none")
 	args.routeMode = flag.Int("routeMode", 0, "Route config mode")
-	args.dns = flag.String("dns", "223.5.5.5,114.114.114.114,8.8.88,1.1.1.1", "Dns address")
+	args.dns = flag.String("dns", "223.5.5.5:53,114.114.114.114:53,8.8.8.8:53,1.1.1.1:53", "Dns address")
 	args.allowInsecure = flag.Bool("allowInsecure", false, "Is allow insecure")
 	args.mux = flag.Int("mux", -1, "Is use mux and maximum number of concurrency")
-	args.assetPath = flag.String("assetPath", "", "The xray param value of xray.location.assetPath")
+	args.assetPath = flag.String("assetPath", "/xray/", "The xray param value of xray.location.assetPath")
 	args.version = flag.Bool("version", false, "Print the version and exit.")
 	flag.Parse()
 

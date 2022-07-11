@@ -73,7 +73,7 @@ type intratunnel struct {
 // `listener` will be notified at the completion of every tunneled socket.
 func NewTunnel(fakedns string, dohdns doh.Transport, tunWriter io.WriteCloser, dialer *net.Dialer, config *net.ListenConfig, listener Listener) (Tunnel, error) {
 	if tunWriter == nil {
-		return nil, errors.New("Must provide a valid TUN writer")
+		return nil, errors.New("must provide a valid TUN writer")
 	}
 	core.RegisterOutputFn(tunWriter.Write)
 	t := &intratunnel{
