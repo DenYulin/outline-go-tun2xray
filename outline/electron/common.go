@@ -23,6 +23,7 @@ func toXrayProfile() *xray.Profile {
 	return &xray.Profile{
 		Host:             *args.host,
 		Path:             *args.path,
+		InboundSocksPort: uint32(*args.inboundSocksPort),
 		TLS:              *args.security,
 		Address:          *args.serverAddress,
 		Port:             uint32(*args.serverPort),

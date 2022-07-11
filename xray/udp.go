@@ -27,32 +27,33 @@ type udpConnEntry struct {
 type udpHandler struct {
 	sync.Mutex
 
-	ctx     context.Context
-	v       *core.Instance
-	connMap map[t2core.UDPConn]*udpConnEntry
-	timeout time.Duration
+	ctx      context.Context
+	instance *core.Instance
+	connMap  map[t2core.UDPConn]*udpConnEntry
+	timeout  time.Duration
 }
 
 func NewUDPHandler(ctx context.Context, instance *core.Instance, timeout time.Duration) t2core.UDPConnHandler {
 	return &udpHandler{
-		ctx:     ctx,
-		v:       instance,
-		connMap: make(map[t2core.UDPConn]*udpConnEntry, 16),
-		timeout: timeout,
+		ctx:      ctx,
+		instance: instance,
+		connMap:  make(map[t2core.UDPConn]*udpConnEntry, 16),
+		timeout:  timeout,
 	}
 }
 
 func (handler *udpHandler) Connect(conn t2core.UDPConn, target *net.UDPAddr) error {
 	if target == nil {
+		log.Debugf("The udp target is not allowed to be empty")
 		return errors.New("nil target is not allowed")
 	}
 	sid := session.NewID()
 	ctx := session.ContextWithID(handler.ctx, sid)
 	ctx, cancel := context.WithCancel(ctx)
-	pc, err := core.DialUDP(ctx, handler.v)
+	pc, err := core.DialUDP(ctx, handler.instance)
 	if err != nil {
 		cancel()
-		return fmt.Errorf("dial V proxy connection failed: %v", err)
+		return fmt.Errorf("dial xray proxy udp connection failed: %v", err)
 	}
 	timer := signal.CancelAfterInactivity(ctx, cancel, handler.timeout)
 	handler.Lock()
@@ -68,10 +69,12 @@ func (handler *udpHandler) Connect(conn t2core.UDPConn, target *net.UDPAddr) err
 	}
 	go func() {
 		if err := task.Run(ctx, fetchTask); err != nil {
-			pc.Close()
+			if err := pc.Close(); err != nil {
+				log.Errorf("Failed to close dial udp connect, error: %s", err.Error())
+			}
 		}
 	}()
-	log.Infof("new proxy connection for target: %s:%s", target.Network(), target.String())
+	log.Infof("New proxy udp connection for target: %s:%s", target.Network(), target.String())
 	return nil
 }
 
@@ -99,7 +102,9 @@ func (handler *udpHandler) Close(conn t2core.UDPConn) {
 	defer handler.Unlock()
 
 	if c, found := handler.connMap[conn]; found {
-		c.conn.Close()
+		if err := c.conn.Close(); err != nil {
+			log.Errorf("Failed to close handler, error: %s", err.Error())
+		}
 	}
 	delete(handler.connMap, conn)
 }

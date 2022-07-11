@@ -21,6 +21,7 @@ import (
 type Profile struct {
 	Host             string
 	Path             string
+	InboundSocksPort uint32
 	TLS              string
 	Address          string
 	Port             uint32

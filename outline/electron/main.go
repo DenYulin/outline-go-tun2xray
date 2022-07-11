@@ -54,6 +54,7 @@ var args struct {
 	checkXrayConfig  *bool   // 是否在检查xray配置是否合规
 	host             *string // 底层传输方式配置中的 host，和
 	path             *string // 底层传输方式配置中的 path or key 路径，默认值为 ["/"]。当有多个值时，每次请求随机选择一个值。
+	inboundSocksPort *uint64 // 入站 socks 协议的port
 	security         *string // 是否启用传输层加密，none: 不加密，tls: 使用tls加密，xtls: 使用tls加密
 	serverAddress    *string // 服务器地址，出站Outbound的Address，指向服务端，支持域名、IPv4、IPv6。
 	serverPort       *uint64 // 服务端端口，通常与服务端监听的端口相同
@@ -89,6 +90,7 @@ func main() {
 	args.checkXrayConfig = flag.Bool("checkXrayConfig", false, "Test xray conf file only, without launching Xray client.")
 	args.host = flag.String("host", "127.0.0.1", "Transport config host")
 	args.path = flag.String("path", "/", "Transport config path")
+	args.inboundSocksPort = flag.Uint64("inboundSocksPort", 1080, "inbound socks protocol port")
 	args.security = flag.String("security", "none", "Transport Layer Encryption")
 	args.serverAddress = flag.String("serverAddress", "127.0.0.1", "Server address")
 	args.serverPort = flag.Uint64("serverPort", 443, "Server port")
@@ -138,41 +140,42 @@ func main() {
 		}
 	}
 
+	ctx := getContext()
+
+	tunDnsServers := strings.Split(*args.tunDNS, ",")
+	if tunDevice, err = tun.OpenTunDevice(*args.tunName, *args.tunAddr, *args.tunGw, *args.tunMask, tunDnsServers, persistTun); err != nil {
+		log.Errorf("Failed to open TUN device, error: %s", err.Error())
+		os.Exit(OpenTunFailure)
+	}
+
+	core.RegisterTCPConnHandler(xray.NewTCPHandler(ctx, xrayClient))
+	core.RegisterUDPConnHandler(xray.NewUDPHandler(ctx, xrayClient, udpTimeout))
+	core.RegisterOutputFn(tunDevice.Write)
+
+	lwipWriter = core.NewLWIPStack()
+
+	go func() {
+		if _, err = io.CopyBuffer(lwipWriter, tunDevice, make([]byte, mtu)); err != nil {
+			log.Fatalf("Failed to write data to network stack: %v", err)
+		}
+	}()
+
+	log.Infof("Tun2xray running...")
+
+	osSignals := make(chan os.Signal, 1)
+	signal.Notify(osSignals, os.Interrupt, os.Kill, syscall.SIGTERM, syscall.SIGHUP)
+	sig := <-osSignals
+	log.Debugf("Received signal: %v", sig)
+}
+
+func getContext() context.Context {
 	ctx := context.Background()
 	content := session.ContentFromContext(ctx)
 	if content == nil {
 		content = new(session.Content)
 		ctx = session.ContextWithContent(ctx, content)
 	}
-
-	tunDnsServers := strings.Split(*args.tunDNS, ",")
-	tunDevice, err = tun.OpenTunDevice(*args.tunName, *args.tunAddr, *args.tunGw, *args.tunMask, tunDnsServers, persistTun)
-	if err != nil {
-		log.Errorf("Failed to open TUN device, error: %s", err.Error())
-		os.Exit(OpenTunFailure)
-	}
-
-	core.RegisterOutputFn(tunDevice.Write)
-
-	core.RegisterTCPConnHandler(xray.NewTCPHandler(ctx, xrayClient))
-	core.RegisterUDPConnHandler(xray.NewUDPHandler(ctx, xrayClient, udpTimeout))
-
-	lwipWriter = core.NewLWIPStack()
-
-	go func() {
-		_, err = io.CopyBuffer(lwipWriter, tunDevice, make([]byte, mtu))
-		if err != nil {
-			log.Errorf("Failed to write data to network stack: %v", err)
-			os.Exit(CopyDataToTunDeviceFailure)
-		}
-	}()
-
-	log.Infof("tun2xray runner...")
-
-	osSignals := make(chan os.Signal, 1)
-	signal.Notify(osSignals, os.Interrupt, os.Kill, syscall.SIGTERM, syscall.SIGHUP)
-	sig := <-osSignals
-	log.Debugf("Received signal: %v", sig)
+	return ctx
 }
 
 func setLogLevel(level string) {
