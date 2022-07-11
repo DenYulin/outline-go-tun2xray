@@ -17,15 +17,14 @@
 package intra
 
 import (
+	"github.com/DenYulin/outline-go-tun2xray/intra/doh"
+	"github.com/DenYulin/outline-go-tun2xray/intra/split"
 	"io"
 	"net"
 	"time"
 
 	"github.com/eycorsican/go-tun2socks/common/log"
 	"github.com/eycorsican/go-tun2socks/core"
-
-	"github.com/Jigsaw-Code/outline-go-tun2socks/intra/doh"
-	"github.com/Jigsaw-Code/outline-go-tun2socks/intra/split"
 )
 
 // TCPHandler is a core TCP handler that also supports DOH and splitting control.

@@ -17,13 +17,12 @@ package intra
 import (
 	"bytes"
 	"errors"
+	"github.com/DenYulin/outline-go-tun2xray/intra/doh"
+	"github.com/DenYulin/outline-go-tun2xray/intra/split"
 	"strings"
 	"testing"
 
 	"golang.org/x/net/dns/dnsmessage"
-
-	"github.com/Jigsaw-Code/outline-go-tun2socks/intra/doh"
-	"github.com/Jigsaw-Code/outline-go-tun2socks/intra/split"
 )
 
 type qfunc func(q []byte) ([]byte, error)

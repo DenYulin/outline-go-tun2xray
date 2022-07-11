@@ -15,12 +15,12 @@
 package intra
 
 import (
+	"github.com/DenYulin/outline-go-tun2xray/intra/doh"
 	"io"
 	"sync"
 	"time"
 
 	"github.com/Jigsaw-Code/choir"
-	"github.com/Jigsaw-Code/outline-go-tun2socks/intra/doh"
 	"github.com/eycorsican/go-tun2socks/common/log"
 )
 
