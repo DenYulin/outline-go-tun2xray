@@ -50,6 +50,38 @@ type PacketFlow interface {
 	WritePacket(packet []byte)
 }
 
+func StartXRayInstanceWithJson(configJson string) (*core.Instance, error) {
+	log.Infof("Start up xray with json: %s", configJson)
+
+	config := []byte(configJson)
+	if json.Valid(config) {
+		log.Errorf("The param configJson is not a valid json string, configJson: %s", configJson)
+		return nil, errors.New("configJson format is invalid")
+	}
+
+	decodeJSONConfig, err := serial.DecodeJSONConfig(bytes.NewReader(config))
+	if err != nil {
+		log.Fatalf("Decode json conf with reader error, error: %s", err.Error())
+		return nil, err
+	}
+
+	pbConfig, err := decodeJSONConfig.Build()
+	if err != nil {
+		log.Fatalf("Execute decodeJSONConfig.build error, error: %s", err.Error())
+		return nil, err
+	}
+	instance, err := core.New(pbConfig)
+	if err != nil {
+		return nil, err
+	}
+	err = instance.Start()
+	if err != nil {
+		return nil, err
+	}
+	statsManager = instance.GetFeature(stats.ManagerType()).(stats.Manager)
+	return instance, nil
+}
+
 func StartXRayInstanceWithVLess(profile *VLess) (*core.Instance, error) {
 	config, err := LoadVLessConfig(profile)
 	if err != nil {

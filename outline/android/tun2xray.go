@@ -61,6 +61,11 @@ func ConnectXrayTunnel(fd int, configType, jsonConfig, serverAddress string, ser
 			log.Errorf("The param jsonConfig can not be empty")
 			return nil, errors.New("param jsonConfig can not be empty")
 		}
+
+		outlineTunnel, err = xray.NewXrayTunnelWithJson(jsonConfig, tun)
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	go tunnel.ProcessInputPackets(outlineTunnel, tun)

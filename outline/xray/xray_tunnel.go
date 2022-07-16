@@ -63,6 +63,23 @@ func NewXrayTunnel(profile *Profile, tunWriter io.WriteCloser) (outline.Tunnel, 
 	return xrayTunnel, nil
 }
 
+func NewXrayTunnelWithJson(configJson string, tunWriter io.WriteCloser) (outline.Tunnel, error) {
+	if tunWriter == nil {
+		return nil, errors.New("must provide a TUN writer")
+	}
+
+	xrayClient, xrayErr := tun2xray.StartXRayInstanceWithJson(configJson)
+	if xrayErr != nil {
+		return nil, fmt.Errorf("invalid xray proxy parameters, error: %s", xrayErr.Error())
+	}
+
+	lwipStack := t2core.NewLWIPStack()
+	tunnel := tunnel.NewTunnel(tunWriter, lwipStack)
+	xrayTunnel := &outlineXrayTunnel{Tunnel: tunnel, lwipStack: lwipStack, profile: nil, xrayClient: xrayClient}
+	xrayTunnel.registerConnectionHandlers()
+	return xrayTunnel, nil
+}
+
 func (t *outlineXrayTunnel) UpdateUDPSupport() bool {
 	return true
 }
