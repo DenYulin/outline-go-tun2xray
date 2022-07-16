@@ -3,6 +3,7 @@ package common
 import (
 	"github.com/DenYulin/outline-go-tun2xray/outline/xray"
 	"os"
+	"time"
 )
 
 const (
@@ -19,6 +20,13 @@ const (
 	OpenTunFailure             = 10
 	CopyDataToTunDeviceFailure = 11
 )
+
+const (
+	XRayConfigTypeOfParams = "param"
+	XRayConfigTypeOfJson   = "json"
+)
+
+const ReachabilityTimeout = 10 * time.Second
 
 type Args struct {
 	TunAddr          *string // tun虚拟设备地址

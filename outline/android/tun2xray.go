@@ -15,8 +15,10 @@
 package tun2xray
 
 import (
+	"errors"
 	"github.com/DenYulin/outline-go-tun2xray/outline"
-	"github.com/DenYulin/outline-go-tun2xray/outline/xray"
+	"github.com/DenYulin/outline-go-tun2xray/outline/common"
+	xray "github.com/DenYulin/outline-go-tun2xray/outline/xray"
 	"github.com/DenYulin/outline-go-tun2xray/tunnel"
 	"runtime/debug"
 
@@ -34,17 +36,34 @@ type OutlineTunnel interface {
 	outline.Tunnel
 }
 
-func ConnectXrayTunnel(fd int, profile *xray.Profile) (OutlineTunnel, error) {
+func ConnectXrayTunnel(fd int, configType, jsonConfig, serverAddress string, serverPort uint32, userId string) (OutlineTunnel, error) {
 	tun, err := tunnel.MakeTunFile(fd)
 	if err != nil {
+		log.Errorf("Failed to make a new tun device, fd: %d, error: %+v", fd, err)
 		return nil, err
 	}
 
-	t, err := xray.NewXrayTunnel(profile, tun)
-	if err != nil {
-		return nil, err
+	var outlineTunnel outline.Tunnel
+
+	if configType == common.XRayConfigTypeOfParams {
+		profile := &xray.Profile{
+			Address: serverAddress,
+			Port:    serverPort,
+			ID:      userId,
+		}
+
+		outlineTunnel, err = xray.NewXrayTunnel(profile, tun)
+		if err != nil {
+			return nil, err
+		}
+	} else if configType == common.XRayConfigTypeOfJson {
+		if len(jsonConfig) <= 0 {
+			log.Errorf("The param jsonConfig can not be empty")
+			return nil, errors.New("param jsonConfig can not be empty")
+		}
 	}
 
-	go tunnel.ProcessInputPackets(t, tun)
+	go tunnel.ProcessInputPackets(outlineTunnel, tun)
+
 	return nil, nil
 }

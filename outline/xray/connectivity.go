@@ -6,6 +6,8 @@ import (
 	"github.com/DenYulin/outline-go-tun2xray/tun2xray"
 	"github.com/DenYulin/outline-go-tun2xray/xray"
 	"github.com/xtls/xray-core/common/session"
+	"net"
+	"strconv"
 )
 
 func CheckConnectivity(serverAddress string, serverPort uint32, userId string) (int, error) {
@@ -47,4 +49,15 @@ func CheckConnectivity(serverAddress string, serverPort uint32, userId string) (
 	}
 
 	return common.Unexpected, tcpErr
+}
+
+// CheckServerReachable determines whether the server at `host:port` is reachable over TCP.
+// Returns an error if the server is unreachable.
+func CheckServerReachable(host string, port int) error {
+	conn, err := net.DialTimeout("tcp", net.JoinHostPort(host, strconv.Itoa(port)), common.ReachabilityTimeout)
+	if err != nil {
+		return err
+	}
+	conn.Close()
+	return nil
 }
