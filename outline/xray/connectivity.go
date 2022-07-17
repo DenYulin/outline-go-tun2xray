@@ -10,10 +10,10 @@ import (
 	"strconv"
 )
 
-func CheckConnectivity(serverAddress string, serverPort uint32, userId string) (int, error) {
+func CheckConnectivity(serverAddress string, serverPort int, userId string) (int, error) {
 	profile := &tun2xray.VLess{
 		Host: serverAddress,
-		Port: serverPort,
+		Port: uint32(serverPort),
 		ID:   userId,
 	}
 

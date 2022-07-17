@@ -36,7 +36,7 @@ type OutlineTunnel interface {
 	outline.Tunnel
 }
 
-func ConnectXrayTunnel(fd int, configType, jsonConfig, serverAddress string, serverPort uint32, userId string) (OutlineTunnel, error) {
+func ConnectXrayTunnel(fd int, configType, jsonConfig, serverAddress string, serverPort int, userId string) (OutlineTunnel, error) {
 	tun, err := tunnel.MakeTunFile(fd)
 	if err != nil {
 		log.Errorf("Failed to make a new tun device, fd: %d, error: %+v", fd, err)
@@ -48,7 +48,7 @@ func ConnectXrayTunnel(fd int, configType, jsonConfig, serverAddress string, ser
 	if configType == common.XRayConfigTypeOfParams {
 		profile := &common.Profile{
 			Address: serverAddress,
-			Port:    serverPort,
+			Port:    uint32(serverPort),
 			ID:      userId,
 		}
 
