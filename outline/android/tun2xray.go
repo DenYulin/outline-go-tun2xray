@@ -18,7 +18,7 @@ import (
 	"errors"
 	"github.com/DenYulin/outline-go-tun2xray/outline"
 	"github.com/DenYulin/outline-go-tun2xray/outline/common"
-	xray "github.com/DenYulin/outline-go-tun2xray/outline/xray"
+	"github.com/DenYulin/outline-go-tun2xray/outline/xray"
 	"github.com/DenYulin/outline-go-tun2xray/tunnel"
 	"runtime/debug"
 
@@ -46,7 +46,7 @@ func ConnectXrayTunnel(fd int, configType, jsonConfig, serverAddress string, ser
 	var outlineTunnel outline.Tunnel
 
 	if configType == common.XRayConfigTypeOfParams {
-		profile := &xray.Profile{
+		profile := &common.Profile{
 			Address: serverAddress,
 			Port:    serverPort,
 			ID:      userId,

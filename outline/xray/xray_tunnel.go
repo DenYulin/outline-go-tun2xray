@@ -6,9 +6,10 @@ import (
 	"fmt"
 	"github.com/DenYulin/outline-go-tun2xray/features"
 	"github.com/DenYulin/outline-go-tun2xray/outline"
-	"github.com/DenYulin/outline-go-tun2xray/tun2xray"
+	"github.com/DenYulin/outline-go-tun2xray/outline/common"
 	"github.com/DenYulin/outline-go-tun2xray/tunnel"
 	"github.com/DenYulin/outline-go-tun2xray/xray"
+	"github.com/DenYulin/outline-go-tun2xray/xray/tun2xray"
 	t2core "github.com/eycorsican/go-tun2socks/core"
 	"github.com/xtls/xray-core/common/session"
 	x2core "github.com/xtls/xray-core/core"
@@ -17,36 +18,14 @@ import (
 	"time"
 )
 
-// Profile is the basic parameter used by xray startup
-type Profile struct {
-	Host             string
-	Path             string
-	InboundSocksPort uint32
-	TLS              string
-	Address          string
-	Port             uint32
-	Net              string
-	ID               string
-	Flow             string
-	Type             string // headerType
-	OutboundProtocol string `json:"protocol"`
-	UseIPv6          bool   `json:"useIPv6"`
-	LogLevel         string `json:"logLevel"`
-	RouteMode        int    `json:"routeMode"`
-	DNS              string `json:"DNS"`
-	AllowInsecure    bool   `json:"allowInsecure"`
-	Mux              int    `json:"mux"`
-	AssetPath        string `json:"assetPath"`
-}
-
 type outlineXrayTunnel struct {
 	tunnel.Tunnel
 	lwipStack  t2core.LWIPStack
-	profile    *Profile
+	profile    *common.Profile
 	xrayClient *x2core.Instance
 }
 
-func NewXrayTunnel(profile *Profile, tunWriter io.WriteCloser) (outline.Tunnel, error) {
+func NewXrayTunnel(profile *common.Profile, tunWriter io.WriteCloser) (outline.Tunnel, error) {
 	if tunWriter == nil {
 		return nil, errors.New("must provide a TUN writer")
 	}
@@ -96,7 +75,7 @@ func (t *outlineXrayTunnel) registerConnectionHandlers() {
 	t2core.RegisterUDPConnHandler(xray.NewUDPHandler(ctx, t.xrayClient, 3*time.Minute))
 }
 
-func CreateXrayClient(profile *Profile) (*x2core.Instance, error) {
+func CreateXrayClient(profile *common.Profile) (*x2core.Instance, error) {
 	if profile == nil {
 		return nil, errors.New("create xray client error")
 	}
@@ -111,7 +90,7 @@ func CreateXrayClient(profile *Profile) (*x2core.Instance, error) {
 	}
 }
 
-func toVLessProfile(profile *Profile) *tun2xray.VLess {
+func toVLessProfile(profile *common.Profile) *tun2xray.VLess {
 	vLessProfile := &tun2xray.VLess{
 		Host:     profile.Host,
 		Path:     profile.Path,

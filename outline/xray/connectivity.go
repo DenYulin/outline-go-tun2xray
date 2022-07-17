@@ -3,8 +3,8 @@ package xray
 import (
 	"context"
 	"github.com/DenYulin/outline-go-tun2xray/outline/common"
-	"github.com/DenYulin/outline-go-tun2xray/tun2xray"
 	"github.com/DenYulin/outline-go-tun2xray/xray"
+	"github.com/DenYulin/outline-go-tun2xray/xray/tun2xray"
 	"github.com/xtls/xray-core/common/session"
 	"net"
 	"strconv"

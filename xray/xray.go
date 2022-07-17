@@ -18,8 +18,6 @@ import (
 
 const JsonFormat = "json"
 
-type VLess features.VLess
-
 func StartInstance(config []byte) (*core.Instance, error) {
 	jsonConfig, err := serial.DecodeJSONConfig(bytes.NewReader(config))
 	if err != nil {

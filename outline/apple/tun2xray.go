@@ -17,6 +17,7 @@ package tun2xray
 import (
 	"errors"
 	"github.com/DenYulin/outline-go-tun2xray/outline"
+	"github.com/DenYulin/outline-go-tun2xray/outline/common"
 	"github.com/DenYulin/outline-go-tun2xray/outline/xray"
 	"io"
 	"runtime/debug"
@@ -47,7 +48,7 @@ func init() {
 	}()
 }
 
-func ConnectXrayTunnel(tunWriter TunWriter, profile *xray.Profile) (OutlineTunnel, error) {
+func ConnectXrayTunnel(tunWriter TunWriter, profile *common.Profile) (OutlineTunnel, error) {
 	if tunWriter == nil {
 		return nil, errors.New("must provide a TunWriter")
 	}

@@ -1,4 +1,4 @@
-package xray
+package features
 
 import (
 	// The following are necessary as they register handlers in their init functions.

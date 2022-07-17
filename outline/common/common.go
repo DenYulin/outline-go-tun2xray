@@ -1,7 +1,6 @@
 package common
 
 import (
-	"github.com/DenYulin/outline-go-tun2xray/outline/xray"
 	"os"
 	"time"
 )
@@ -58,13 +57,35 @@ type Args struct {
 	Version          *bool   // 输出版本号
 }
 
+// Profile is the basic parameter used by xray startup
+type Profile struct {
+	Host             string
+	Path             string
+	InboundSocksPort uint32
+	TLS              string
+	Address          string
+	Port             uint32
+	Net              string
+	ID               string
+	Flow             string
+	Type             string // headerType
+	OutboundProtocol string `json:"protocol"`
+	UseIPv6          bool   `json:"useIPv6"`
+	LogLevel         string `json:"logLevel"`
+	RouteMode        int    `json:"routeMode"`
+	DNS              string `json:"DNS"`
+	AllowInsecure    bool   `json:"allowInsecure"`
+	Mux              int    `json:"mux"`
+	AssetPath        string `json:"assetPath"`
+}
+
 func FileExists(file string) bool {
 	info, err := os.Stat(file)
 	return err == nil && !info.IsDir()
 }
 
-func ToXrayProfile(args Args) *xray.Profile {
-	return &xray.Profile{
+func ToXrayProfile(args Args) *Profile {
+	return &Profile{
 		Host:             *args.Host,
 		Path:             *args.Path,
 		InboundSocksPort: uint32(*args.InboundSocksPort),
