@@ -16,23 +16,11 @@ package tun2xray
 
 import (
 	"errors"
-	"github.com/DenYulin/outline-go-tun2xray/outline"
 	"github.com/DenYulin/outline-go-tun2xray/outline/common"
-	"github.com/DenYulin/outline-go-tun2xray/outline/xray"
-	"io"
+	"github.com/eycorsican/go-tun2socks/common/log"
 	"runtime/debug"
 	"time"
 )
-
-// OutlineTunnel embeds the tun2socks.Tunnel interface so it gets exported by gobind.
-type OutlineTunnel interface {
-	outline.Tunnel
-}
-
-// TunWriter is an interface that allows for outputting packets to the TUN (VPN).
-type TunWriter interface {
-	io.WriteCloser
-}
 
 func init() {
 	// Apple VPN extensions have a memory limit of 15MB. Conserve memory by increasing garbage
@@ -48,10 +36,16 @@ func init() {
 	}()
 }
 
-func ConnectXrayTunnel(tunWriter TunWriter, profile *common.Profile) (OutlineTunnel, error) {
+func ConnectXrayTunnel(tunWriter common.TunWriter, configType, jsonConfig, serverAddress string, serverPort int, userId string) (common.OutlineTunnel, error) {
 	if tunWriter == nil {
 		return nil, errors.New("must provide a TunWriter")
 	}
 
-	return xray.NewXrayTunnel(profile, tunWriter)
+	outlineTunnel, err := common.CreateOutlineTunnel(tunWriter, configType, jsonConfig, serverAddress, serverPort, userId)
+	if err != nil {
+		log.Errorf("Failed to create outline tunnel, error: %+v", err)
+		return nil, err
+	}
+
+	return outlineTunnel, nil
 }

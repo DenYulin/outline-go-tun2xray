@@ -1,6 +1,11 @@
 package common
 
 import (
+	"errors"
+	"github.com/DenYulin/outline-go-tun2xray/outline"
+	"github.com/DenYulin/outline-go-tun2xray/outline/xray"
+	"github.com/eycorsican/go-tun2socks/common/log"
+	"io"
 	"os"
 	"time"
 )
@@ -26,6 +31,16 @@ const (
 )
 
 const ReachabilityTimeout = 10 * time.Second
+
+// OutlineTunnel embeds the tun2socks.Tunnel interface so it gets exported by gobind.
+type OutlineTunnel interface {
+	outline.Tunnel
+}
+
+// TunWriter is an interface that allows for outputting packets to the TUN (VPN).
+type TunWriter interface {
+	io.WriteCloser
+}
 
 type Args struct {
 	TunAddr          *string // tun虚拟设备地址
@@ -77,6 +92,36 @@ type Profile struct {
 	AllowInsecure    bool   `json:"allowInsecure"`
 	Mux              int    `json:"mux"`
 	AssetPath        string `json:"assetPath"`
+}
+
+func CreateOutlineTunnel(tun TunWriter, configType, jsonConfig, serverAddress string, serverPort int, userId string) (OutlineTunnel, error) {
+	var err error
+	var outlineTunnel outline.Tunnel
+
+	if configType == XRayConfigTypeOfParams {
+		profile := &Profile{
+			Address: serverAddress,
+			Port:    uint32(serverPort),
+			ID:      userId,
+		}
+
+		outlineTunnel, err = xray.NewXrayTunnel(profile, tun)
+		if err != nil {
+			return nil, err
+		}
+	} else if configType == XRayConfigTypeOfJson {
+		if len(jsonConfig) <= 0 {
+			log.Errorf("The param jsonConfig can not be empty")
+			return nil, errors.New("param jsonConfig can not be empty")
+		}
+
+		outlineTunnel, err = xray.NewXrayTunnelWithJson(jsonConfig, tun)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	return outlineTunnel, nil
 }
 
 func FileExists(file string) bool {
