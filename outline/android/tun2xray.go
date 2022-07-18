@@ -15,7 +15,7 @@
 package tun2xray
 
 import (
-	"github.com/DenYulin/outline-go-tun2xray/outline/common"
+	"github.com/DenYulin/outline-go-tun2xray/outline/xray"
 	"github.com/DenYulin/outline-go-tun2xray/tunnel"
 	"runtime/debug"
 
@@ -25,17 +25,17 @@ import (
 func init() {
 	// Conserve memory by increasing garbage collection frequency.
 	debug.SetGCPercent(10)
-	log.SetLevel(log.WARN)
+	log.SetLevel(log.DEBUG)
 }
 
-func ConnectXrayTunnel(fd int, configType, jsonConfig, serverAddress string, serverPort int, userId string) (common.OutlineTunnel, error) {
+func ConnectXrayTunnel(fd int, configType, jsonConfig, serverAddress string, serverPort int, userId string) (xray.OutlineTunnel, error) {
 	tun, err := tunnel.MakeTunFile(fd)
 	if err != nil {
 		log.Errorf("Failed to make a new tun device, fd: %d, error: %+v", fd, err)
 		return nil, err
 	}
 
-	outlineTunnel, err := common.CreateOutlineTunnel(tun, configType, jsonConfig, serverAddress, serverPort, userId)
+	outlineTunnel, err := xray.CreateOutlineTunnel(tun, configType, jsonConfig, serverAddress, serverPort, userId)
 	if err != nil {
 		log.Errorf("Failed to create outline tunnel, error: %+v", err)
 		return nil, err

@@ -6,10 +6,10 @@ import (
 	"fmt"
 	"github.com/DenYulin/outline-go-tun2xray/features"
 	"github.com/DenYulin/outline-go-tun2xray/outline"
-	"github.com/DenYulin/outline-go-tun2xray/outline/common"
 	"github.com/DenYulin/outline-go-tun2xray/tunnel"
 	"github.com/DenYulin/outline-go-tun2xray/xray"
 	"github.com/DenYulin/outline-go-tun2xray/xray/tun2xray"
+	"github.com/eycorsican/go-tun2socks/common/log"
 	t2core "github.com/eycorsican/go-tun2socks/core"
 	"github.com/xtls/xray-core/common/session"
 	x2core "github.com/xtls/xray-core/core"
@@ -21,11 +21,11 @@ import (
 type outlineXrayTunnel struct {
 	tunnel.Tunnel
 	lwipStack  t2core.LWIPStack
-	profile    *common.Profile
+	profile    *Profile
 	xrayClient *x2core.Instance
 }
 
-func NewXrayTunnel(profile *common.Profile, tunWriter io.WriteCloser) (outline.Tunnel, error) {
+func NewXrayTunnel(profile *Profile, tunWriter io.WriteCloser) (outline.Tunnel, error) {
 	if tunWriter == nil {
 		return nil, errors.New("must provide a TUN writer")
 	}
@@ -75,22 +75,28 @@ func (t *outlineXrayTunnel) registerConnectionHandlers() {
 	t2core.RegisterUDPConnHandler(xray.NewUDPHandler(ctx, t.xrayClient, 3*time.Minute))
 }
 
-func CreateXrayClient(profile *common.Profile) (*x2core.Instance, error) {
+func CreateXrayClient(profile *Profile) (*x2core.Instance, error) {
 	if profile == nil {
 		return nil, errors.New("create xray client error")
 	}
 
 	switch profile.OutboundProtocol {
 	case tun2xray.VLESS:
-		os.Setenv("xray.location.asset", profile.AssetPath)
+		log.Infof("Start to create xray client with VLess protocol")
+		key := "xray.location.asset"
+		if err := os.Setenv(key, profile.AssetPath); err != nil {
+			log.Errorf("Failed to set a env param, key: %s, value: %s, error: %+v", key, profile.AssetPath, err)
+			return nil, err
+		}
 		vLessProfile := toVLessProfile(profile)
 		return tun2xray.StartXRayInstanceWithVLess(vLessProfile)
 	default:
+		log.Warnf("unsupported xray outbound protocol, protocol: %s", profile.OutboundProtocol)
 		return nil, errors.New("unsupported xray outbound protocol")
 	}
 }
 
-func toVLessProfile(profile *common.Profile) *tun2xray.VLess {
+func toVLessProfile(profile *Profile) *tun2xray.VLess {
 	vLessProfile := &tun2xray.VLess{
 		Host:     profile.Host,
 		Path:     profile.Path,

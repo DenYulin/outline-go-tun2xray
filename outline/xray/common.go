@@ -1,9 +1,9 @@
-package common
+package xray
 
 import (
+	"encoding/json"
 	"errors"
 	"github.com/DenYulin/outline-go-tun2xray/outline"
-	"github.com/DenYulin/outline-go-tun2xray/outline/xray"
 	"github.com/eycorsican/go-tun2socks/common/log"
 	"io"
 	"os"
@@ -94,7 +94,17 @@ type Profile struct {
 	AssetPath        string `json:"assetPath"`
 }
 
+func (profile *Profile) String() string {
+	jsonBytes, err := json.Marshal(profile)
+	if err != nil {
+		log.Errorf("Failed to serialize profile to json， error: %+v", err)
+		return ""
+	}
+	return string(jsonBytes)
+}
+
 func CreateOutlineTunnel(tun TunWriter, configType, jsonConfig, serverAddress string, serverPort int, userId string) (OutlineTunnel, error) {
+	log.Infof("Start to create a new outline tunnel with xray, configType: %s, jsonConfig: %s, serverAddress: %s, serverPort: %d, userId: %s", configType, jsonConfig, serverAddress, serverPort, userId)
 	var err error
 	var outlineTunnel outline.Tunnel
 
@@ -105,8 +115,9 @@ func CreateOutlineTunnel(tun TunWriter, configType, jsonConfig, serverAddress st
 			ID:      userId,
 		}
 
-		outlineTunnel, err = xray.NewXrayTunnel(profile, tun)
+		outlineTunnel, err = NewXrayTunnel(profile, tun)
 		if err != nil {
+			log.Errorf("Failed to create a new xray tunnel, profile: %s", profile.String())
 			return nil, err
 		}
 	} else if configType == XRayConfigTypeOfJson {
@@ -115,12 +126,14 @@ func CreateOutlineTunnel(tun TunWriter, configType, jsonConfig, serverAddress st
 			return nil, errors.New("param jsonConfig can not be empty")
 		}
 
-		outlineTunnel, err = xray.NewXrayTunnelWithJson(jsonConfig, tun)
+		outlineTunnel, err = NewXrayTunnelWithJson(jsonConfig, tun)
 		if err != nil {
+			log.Errorf("Failed to create a new xray tunnel with json, jsonConfig: %s", jsonConfig)
 			return nil, err
 		}
 	}
 
+	log.Infof("Success to create a new outline tunnel with xray")
 	return outlineTunnel, nil
 }
 

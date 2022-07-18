@@ -16,7 +16,7 @@ package tun2xray
 
 import (
 	"errors"
-	"github.com/DenYulin/outline-go-tun2xray/outline/common"
+	"github.com/DenYulin/outline-go-tun2xray/outline/xray"
 	"github.com/eycorsican/go-tun2socks/common/log"
 	"runtime/debug"
 	"time"
@@ -36,12 +36,12 @@ func init() {
 	}()
 }
 
-func ConnectXrayTunnel(tunWriter common.TunWriter, configType, jsonConfig, serverAddress string, serverPort int, userId string) (common.OutlineTunnel, error) {
+func ConnectXrayTunnel(tunWriter xray.TunWriter, configType, jsonConfig, serverAddress string, serverPort int, userId string) (xray.OutlineTunnel, error) {
 	if tunWriter == nil {
 		return nil, errors.New("must provide a TunWriter")
 	}
 
-	outlineTunnel, err := common.CreateOutlineTunnel(tunWriter, configType, jsonConfig, serverAddress, serverPort, userId)
+	outlineTunnel, err := xray.CreateOutlineTunnel(tunWriter, configType, jsonConfig, serverAddress, serverPort, userId)
 	if err != nil {
 		log.Errorf("Failed to create outline tunnel, error: %+v", err)
 		return nil, err

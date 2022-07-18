@@ -2,9 +2,9 @@ package xray
 
 import (
 	"context"
-	"github.com/DenYulin/outline-go-tun2xray/outline/common"
 	"github.com/DenYulin/outline-go-tun2xray/xray"
 	"github.com/DenYulin/outline-go-tun2xray/xray/tun2xray"
+	"github.com/eycorsican/go-tun2socks/common/log"
 	"github.com/xtls/xray-core/common/session"
 	"net"
 	"strconv"
@@ -19,7 +19,7 @@ func CheckConnectivity(serverAddress string, serverPort int, userId string) (int
 
 	xrayClient, err := tun2xray.StartXRayInstanceWithVLess(profile)
 	if err != nil {
-		return common.Unexpected, err
+		return Unexpected, err
 	}
 
 	ctx := context.Background()
@@ -37,27 +37,31 @@ func CheckConnectivity(serverAddress string, serverPort int, userId string) (int
 	tcpErr := <-tcpChan
 	if tcpErr == nil {
 		// The TCP connectivity checks succeeded, which means UDP is not supported.
-		return common.NoError, nil
+		return NoError, nil
 	}
 
 	_, isReachabilityError := tcpErr.(*xray.ReachabilityError)
 	_, isAuthError := tcpErr.(*xray.AuthenticationError)
 	if isAuthError {
-		return common.AuthenticationFailure, nil
+		return AuthenticationFailure, nil
 	} else if isReachabilityError {
-		return common.Unreachable, nil
+		return Unreachable, nil
 	}
 
-	return common.Unexpected, tcpErr
+	return Unexpected, tcpErr
 }
 
 // CheckServerReachable determines whether the server at `host:port` is reachable over TCP.
 // Returns an error if the server is unreachable.
 func CheckServerReachable(host string, port int) error {
-	conn, err := net.DialTimeout("tcp", net.JoinHostPort(host, strconv.Itoa(port)), common.ReachabilityTimeout)
+	conn, err := net.DialTimeout("tcp", net.JoinHostPort(host, strconv.Itoa(port)), ReachabilityTimeout)
 	if err != nil {
+		log.Errorf("Failed to tcp dial, host: %s, port: %d, error: %+v", host, port, err)
 		return err
 	}
-	conn.Close()
+	if err := conn.Close(); err != nil {
+		log.Errorf("Failed to close tcp connect, error: %+v", err)
+		return err
+	}
 	return nil
 }

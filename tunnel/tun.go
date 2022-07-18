@@ -28,8 +28,11 @@ func MakeTunFile(fd int) (*os.File, error) {
 	}
 	file := os.NewFile(uintptr(newFd), "")
 	if file == nil {
+		log.Errorf("Failed to open TUN file descriptor, fd: %d", newFd)
 		return nil, errors.New("failed to open TUN file descriptor")
 	}
+
+	log.Infof("Success to make a new tun file, fd: %d", fd)
 	return file, nil
 }
 
@@ -46,6 +49,8 @@ func ProcessInputPackets(tunnel Tunnel, tun *os.File) {
 			log.Infof("Read EOF from TUN")
 			continue
 		}
-		tunnel.Write(buffer)
+		if code, err := tunnel.Write(buffer); err != nil {
+			log.Errorf("Failed to write msg to tunnel, code: %d, error: %+v", code, err)
+		}
 	}
 }

@@ -18,7 +18,6 @@ import (
 	"context"
 	"flag"
 	"fmt"
-	"github.com/DenYulin/outline-go-tun2xray/outline/common"
 	xrayTunnel "github.com/DenYulin/outline-go-tun2xray/outline/xray"
 	"github.com/DenYulin/outline-go-tun2xray/xray"
 	"github.com/DenYulin/outline-go-tun2xray/xray/tun2xray"
@@ -74,7 +73,7 @@ const (
 //	version          *bool   // 输出版本号
 //}
 
-var args = common.Args{}
+var args = xrayTunnel.Args{}
 var version string // Populated at build time through `-X main.version=...`
 var lwipWriter io.Writer
 var tunDevice io.ReadWriteCloser
@@ -122,23 +121,23 @@ func main() {
 	if *args.ConfigFormat == "json" {
 		if *args.ConfigFilePath == "" {
 			log.Errorf("Must provide a xray config file of json when configFormat is set to json")
-			os.Exit(common.JsonXrayConfigFileNotExist)
+			os.Exit(xrayTunnel.JsonXrayConfigFileNotExist)
 		} else {
-			if !common.FileExists(*args.ConfigFilePath) {
+			if !xrayTunnel.FileExists(*args.ConfigFilePath) {
 				log.Errorf("The xray config file of json is not exist, configFilePath: %s", *args.ConfigFilePath)
-				os.Exit(common.JsonXrayConfigFileNotExist)
+				os.Exit(xrayTunnel.JsonXrayConfigFileNotExist)
 			}
 		}
 		if xrayClient, err = xray.StartInstanceWithJson(*args.ConfigFilePath); err != nil {
 			log.Errorf("Failed to start up xray client with json, error: %s", err.Error())
-			os.Exit(common.StartUpXrayClientFailure)
+			os.Exit(xrayTunnel.StartUpXrayClientFailure)
 		}
 	} else if *args.ConfigFormat == "param" {
-		profile := common.ToXrayProfile(args)
+		profile := xrayTunnel.ToXrayProfile(args)
 		xrayClient, err = xrayTunnel.CreateXrayClient(profile)
 		if err != nil {
 			log.Errorf("Failed to start up xray client with param profile, error: %s", err.Error())
-			os.Exit(common.StartUpXrayClientFailure)
+			os.Exit(xrayTunnel.StartUpXrayClientFailure)
 		}
 	}
 
@@ -147,7 +146,7 @@ func main() {
 	tunDnsServers := strings.Split(*args.TunDNS, ",")
 	if tunDevice, err = tun.OpenTunDevice(*args.TunName, *args.TunAddr, *args.TunGw, *args.TunMask, tunDnsServers, persistTun); err != nil {
 		log.Errorf("Failed to open TUN device, error: %s", err.Error())
-		os.Exit(common.OpenTunFailure)
+		os.Exit(xrayTunnel.OpenTunFailure)
 	}
 
 	core.RegisterTCPConnHandler(xray.NewTCPHandler(ctx, xrayClient))
