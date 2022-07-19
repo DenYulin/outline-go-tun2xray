@@ -12,9 +12,9 @@ import (
 
 func CheckConnectivity(serverAddress string, serverPort int, userId string) (int, error) {
 	profile := &tun2xray.VLess{
-		Host: serverAddress,
-		Port: uint32(serverPort),
-		ID:   userId,
+		Host:       serverAddress,
+		ServerPort: uint32(serverPort),
+		ID:         userId,
 	}
 
 	xrayClient, err := tun2xray.StartXRayInstanceWithVLess(profile)

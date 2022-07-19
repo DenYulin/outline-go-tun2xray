@@ -8,17 +8,17 @@ import (
 )
 
 var profile = &tun2xray.VLess{
-	Host:         "www.subaru-rabbit.cc",
-	Path:         "/",
-	TLS:          "xtls",
-	Address:      "www.subaru-rabbit.cc",
-	Port:         443,
-	Net:          "tcp",
-	ID:           "2d45a5ae-eb93-4649-8bd5-fe2c282ed31e", // VLess 的用户 ID
-	Flow:         "xtls-rprx-direct",                     // 流控模式，用于选择 XTLS 的算法。
-	Type:         "none",                                 // 底层传输设置中 header 的伪装类型。默认"none"
-	Protocol:     tun2xray.VLESS,
-	VLessOptions: vLessOptions,
+	Host:          "www.subaru-rabbit.cc",
+	Path:          "/",
+	TLS:           "xtls",
+	ServerAddress: "www.subaru-rabbit.cc",
+	ServerPort:    443,
+	Net:           "tcp",
+	ID:            "2d45a5ae-eb93-4649-8bd5-fe2c282ed31e", // VLess 的用户 ID
+	Flow:          "xtls-rprx-direct",                     // 流控模式，用于选择 XTLS 的算法。
+	Type:          "none",                                 // 底层传输设置中 header 的伪装类型。默认"none"
+	Protocol:      tun2xray.VLESS,
+	VLessOptions:  vLessOptions,
 }
 
 var vLessOptions = features.VLessOptions{
@@ -52,11 +52,15 @@ func startXray() {
 	userId := "3b7c7324-fee1-452b-91d9-63bebd3b3c09"
 
 	profile := &xray.Profile{
-		Address:          serverAddress,
-		Port:             uint32(serverPort),
+		InboundPort:      1080,
+		ServerAddress:    serverAddress,
+		ServerPort:       uint32(serverPort),
 		ID:               userId,
 		OutboundProtocol: tun2xray.VLESS,
 		LogLevel:         logLevel,
+		Flow:             "xtls-rprx-direct",
+		DNS:              "1.1.1.1:53,8.8.8.8:53,8.8.4.4:53,9.9.9.9:53,208.67.222.222:53",
+		Mux:              -1,
 	}
 
 	_, xrayErr := xray.CreateXrayClient(profile)

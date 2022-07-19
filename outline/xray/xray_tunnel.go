@@ -27,11 +27,13 @@ type outlineXrayTunnel struct {
 
 func NewXrayTunnel(profile *Profile, tunWriter io.WriteCloser) (outline.Tunnel, error) {
 	if tunWriter == nil {
+		log.Errorf("Must provide a TUN writer")
 		return nil, errors.New("must provide a TUN writer")
 	}
 
 	xrayClient, xrayErr := CreateXrayClient(profile)
 	if xrayErr != nil {
+		log.Errorf("Invalid xray proxy parameters, error: %+v", xrayErr)
 		return nil, fmt.Errorf("invalid xray proxy parameters, error: %s", xrayErr.Error())
 	}
 
@@ -77,6 +79,7 @@ func (t *outlineXrayTunnel) registerConnectionHandlers() {
 
 func CreateXrayClient(profile *Profile) (*x2core.Instance, error) {
 	if profile == nil {
+		log.Errorf("Failed to create xray client, profile is empty")
 		return nil, errors.New("create xray client error")
 	}
 
@@ -84,9 +87,11 @@ func CreateXrayClient(profile *Profile) (*x2core.Instance, error) {
 	case tun2xray.VLESS:
 		log.Infof("Start to create xray client with VLess protocol")
 		key := "xray.location.asset"
-		if err := os.Setenv(key, profile.AssetPath); err != nil {
-			log.Errorf("Failed to set a env param, key: %s, value: %s, error: %+v", key, profile.AssetPath, err)
-			return nil, err
+		if len(profile.AssetPath) > 0 {
+			if err := os.Setenv(key, profile.AssetPath); err != nil {
+				log.Errorf("Failed to set a env param, key: %s, value: %s, error: %+v", key, profile.AssetPath, err)
+				return nil, err
+			}
 		}
 		vLessProfile := toVLessProfile(profile)
 		return tun2xray.StartXRayInstanceWithVLess(vLessProfile)
@@ -98,16 +103,17 @@ func CreateXrayClient(profile *Profile) (*x2core.Instance, error) {
 
 func toVLessProfile(profile *Profile) *tun2xray.VLess {
 	vLessProfile := &tun2xray.VLess{
-		Host:     profile.Host,
-		Path:     profile.Path,
-		TLS:      profile.TLS,
-		Address:  profile.Address,
-		Port:     profile.Port,
-		Net:      profile.Net,
-		ID:       profile.ID,
-		Flow:     profile.Flow,
-		Type:     profile.Type,
-		Protocol: profile.OutboundProtocol,
+		InboundPort:   profile.InboundPort,
+		Host:          profile.Host,
+		Path:          profile.Path,
+		TLS:           profile.TLS,
+		ServerAddress: profile.ServerAddress,
+		ServerPort:    profile.ServerPort,
+		Net:           profile.Net,
+		ID:            profile.ID,
+		Flow:          profile.Flow,
+		Type:          profile.Type,
+		Protocol:      profile.OutboundProtocol,
 		VLessOptions: features.VLessOptions{
 			UseIPv6:       profile.UseIPv6,
 			LogLevel:      profile.LogLevel,

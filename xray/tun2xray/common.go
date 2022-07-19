@@ -107,8 +107,8 @@ func CreateVLessOutboundDetourConfig(profile *VLess) conf.OutboundDetourConfig {
 	outboundsSettings, _ := json.Marshal(xray.OutboundsSettings{
 		Vnext: []xray.Vnext{
 			{
-				Address: profile.Address,
-				Port:    profile.Port,
+				Address: profile.ServerAddress,
+				Port:    profile.ServerPort,
 				Users: []xray.Users{
 					{
 						ID:         profile.ID,

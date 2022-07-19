@@ -74,12 +74,13 @@ type Args struct {
 
 // Profile is the basic parameter used by xray startup
 type Profile struct {
+	InboundPort      uint32
 	Host             string
 	Path             string
 	InboundSocksPort uint32
 	TLS              string
-	Address          string
-	Port             uint32
+	ServerAddress    string
+	ServerPort       uint32
 	Net              string
 	ID               string
 	Flow             string
@@ -110,9 +111,9 @@ func CreateOutlineTunnel(tun TunWriter, configType, jsonConfig, serverAddress st
 
 	if configType == XRayConfigTypeOfParams {
 		profile := &Profile{
-			Address: serverAddress,
-			Port:    uint32(serverPort),
-			ID:      userId,
+			ServerAddress: serverAddress,
+			ServerPort:    uint32(serverPort),
+			ID:            userId,
 		}
 
 		outlineTunnel, err = NewXrayTunnel(profile, tun)
@@ -148,8 +149,8 @@ func ToXrayProfile(args Args) *Profile {
 		Path:             *args.Path,
 		InboundSocksPort: uint32(*args.InboundSocksPort),
 		TLS:              *args.Security,
-		Address:          *args.ServerAddress,
-		Port:             uint32(*args.ServerPort),
+		ServerAddress:    *args.ServerAddress,
+		ServerPort:       uint32(*args.ServerPort),
 		Net:              *args.Net,
 		ID:               *args.Id,
 		Flow:             *args.Flow,

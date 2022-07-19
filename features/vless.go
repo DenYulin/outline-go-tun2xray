@@ -10,16 +10,17 @@ type VLessOptions struct {
 }
 
 type VLess struct {
-	Host     string
-	Path     string
-	TLS      string
-	Address  string
-	Port     uint32
-	Net      string
-	ID       string
-	Flow     string
-	Type     string // headerType
-	Protocol string `json:"protocol"`
+	InboundPort   uint32
+	Host          string
+	Path          string
+	TLS           string
+	ServerAddress string
+	ServerPort    uint32
+	Net           string
+	ID            string
+	Flow          string
+	Type          string // headerType
+	Protocol      string `json:"protocol"`
 	VLessOptions
 }
 

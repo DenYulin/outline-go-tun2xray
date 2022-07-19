@@ -298,11 +298,11 @@ func LoadVLessConfig(profile *VLess) (*conf.Config, error) {
 	// update rules
 	jsonConfig.RouterConfig = CreateRouterConfig(profile.RouteMode)
 	jsonConfig.InboundConfigs = []conf.InboundDetourConfig{
-		//CreateDokodemoDoorInboundDetourConfig(profile.Port),
-		CreateSocks5InboundDetourConfig(profile.Port),
+		//CreateDokodemoDoorInboundDetourConfig(profile.ServerPort),
+		CreateSocks5InboundDetourConfig(profile.InboundPort),
 	}
 
-	//proxyInboundConfig := GetProxyInboundDetourConfig(profile.Port, SOCKS)
+	//proxyInboundConfig := GetProxyInboundDetourConfig(profile.ServerPort, SOCKS)
 	//jsonConfig.InboundConfigs = []conf.InboundDetourConfig{
 	//	proxyInboundConfig,
 	//}
