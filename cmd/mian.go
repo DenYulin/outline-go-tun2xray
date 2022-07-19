@@ -1,7 +1,9 @@
 package main
 
 import (
+	"fmt"
 	"github.com/DenYulin/outline-go-tun2xray/features"
+	"github.com/DenYulin/outline-go-tun2xray/outline/xray"
 	"github.com/DenYulin/outline-go-tun2xray/xray/tun2xray"
 )
 
@@ -29,12 +31,39 @@ var vLessOptions = features.VLessOptions{
 }
 
 func main() {
-	assetPath := "/usr/local/share/xray"
+	//assetPath := "/usr/local/share/xray"
+	//
+	//tun2xray.SetLogLevel(profile.LogLevel)
+	//
+	//err := tun2xray.StartXRayWithTunFd(1, nil, nil, profile, assetPath)
+	//if err != nil {
+	//	return
+	//}
 
-	tun2xray.SetLogLevel(profile.LogLevel)
+	startXray()
+}
 
-	err := tun2xray.StartXRayWithTunFd(1, nil, nil, profile, assetPath)
-	if err != nil {
+func startXray() {
+	logLevel := "debug"
+	tun2xray.SetLogLevel(logLevel)
+
+	serverAddress := "20.205.36.99"
+	serverPort := 443
+	userId := "3b7c7324-fee1-452b-91d9-63bebd3b3c09"
+
+	profile := &xray.Profile{
+		Address:          serverAddress,
+		Port:             uint32(serverPort),
+		ID:               userId,
+		OutboundProtocol: tun2xray.VLESS,
+		LogLevel:         logLevel,
+	}
+
+	_, xrayErr := xray.CreateXrayClient(profile)
+	if xrayErr != nil {
+		fmt.Printf("invalid xray proxy parameters, error: %s", xrayErr.Error())
 		return
 	}
+
+	fmt.Printf("create xray success")
 }
