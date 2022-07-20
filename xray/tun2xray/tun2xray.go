@@ -300,7 +300,7 @@ func LoadVLessConfig(profile *VLess) (*conf.Config, error) {
 	jsonConfig.RouterConfig = CreateRouterConfig(profile.RouteMode)
 	jsonConfig.InboundConfigs = []conf.InboundDetourConfig{
 		//CreateDokodemoDoorInboundDetourConfig(profile.ServerPort),
-		CreateSocks5InboundDetourConfig(profile.InboundPort),
+		//CreateSocks5InboundDetourConfig(profile.InboundPort),
 	}
 
 	//proxyInboundConfig := GetProxyInboundDetourConfig(profile.ServerPort, SOCKS)
