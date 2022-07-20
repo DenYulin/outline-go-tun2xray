@@ -104,6 +104,10 @@ func StartXRayInstanceWithVLess(profile *VLess) (*core.Instance, error) {
 	}
 	decodeJSONConfig.DNSConfig = xray.CreateDNSConfig(profile.VLessOptions)
 
+	decodeJSONConfig.InboundConfigs = []conf.InboundDetourConfig{
+		CreateSocks5InboundDetourConfig(profile.InboundPort),
+	}
+
 	pbConfig, err := decodeJSONConfig.Build()
 	if err != nil {
 		log.Fatalf("Execute decodeJSONConfig.build error, error: %s", err.Error())
