@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"errors"
 	"github.com/DenYulin/outline-go-tun2xray/outline"
+	"github.com/DenYulin/outline-go-tun2xray/xray/tun2xray"
 	"github.com/eycorsican/go-tun2socks/common/log"
 	"io"
 	"os"
@@ -111,9 +112,22 @@ func CreateOutlineTunnel(tun TunWriter, configType, jsonConfig, serverAddress st
 
 	if configType == XRayConfigTypeOfParams {
 		profile := &Profile{
-			ServerAddress: serverAddress,
-			ServerPort:    uint32(serverPort),
-			ID:            userId,
+			InboundPort:      1080,
+			Host:             "127.0.0.1",
+			ServerAddress:    serverAddress,
+			ServerPort:       uint32(serverPort),
+			ID:               userId,
+			OutboundProtocol: tun2xray.VLESS,
+			LogLevel:         "debug",
+			Flow:             "xtls-rprx-direct",
+			DNS:              "1.1.1.1:53,8.8.8.8:53,8.8.4.4:53,9.9.9.9:53,208.67.222.222:53",
+			Mux:              -1,
+			Path:             "/",
+			Net:              "tcp",
+			TLS:              "xtls",
+			Type:             "none",
+			AllowInsecure:    false,
+			UseIPv6:          false,
 		}
 
 		outlineTunnel, err = NewXrayTunnel(profile, tun)
