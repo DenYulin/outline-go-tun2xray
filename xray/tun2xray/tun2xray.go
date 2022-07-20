@@ -102,7 +102,7 @@ func StartXRayInstanceWithVLess(profile *VLess) (*core.Instance, error) {
 		log.Fatalf("Decode json conf with reader error, error: %s", err.Error())
 		return nil, err
 	}
-	//decodeJSONConfig.DNSConfig = xray.CreateDNSConfig(profile.VLessOptions)
+	decodeJSONConfig.DNSConfig = xray.CreateDNSConfig(profile.VLessOptions)
 
 	pbConfig, err := decodeJSONConfig.Build()
 	if err != nil {
@@ -111,10 +111,11 @@ func StartXRayInstanceWithVLess(profile *VLess) (*core.Instance, error) {
 	}
 	instance, err := core.New(pbConfig)
 	if err != nil {
+		log.Errorf("Failed to create a new xray core instance, error: %+v", err)
 		return nil, err
 	}
-	err = instance.Start()
-	if err != nil {
+	if err = instance.Start(); err != nil {
+		log.Errorf("Failed to start xray instance, err: %+v", err)
 		return nil, err
 	}
 	statsManager = instance.GetFeature(stats.ManagerType()).(stats.Manager)
@@ -345,6 +346,7 @@ func GetProxyInboundDetourConfig(proxyPort uint32, protocol string) conf.Inbound
 func (profile *VLess) GetProxyOutboundDetourConfig() conf.OutboundDetourConfig {
 	proxyOutboundConfig := conf.OutboundDetourConfig{}
 	if profile.Protocol == VLESS {
+		proxyOutboundConfig.Tag = "vless-out"
 		proxyOutboundConfig = CreateVLessOutboundDetourConfig(profile)
 	}
 

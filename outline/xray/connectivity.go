@@ -21,6 +21,7 @@ func CheckConnectivity(serverAddress string, serverPort int, userId string) (int
 	if err != nil {
 		return Unexpected, err
 	}
+	defer xrayClient.Close()
 
 	ctx := context.Background()
 	content := session.ContentFromContext(ctx)
