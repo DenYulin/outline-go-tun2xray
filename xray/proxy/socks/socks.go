@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/DenYulin/outline-go-tun2xray/xray/proxy"
+	"github.com/eycorsican/go-tun2socks/common/log"
 	"github.com/xtls/xray-core/common/net"
 	"github.com/xtls/xray-core/infra/conf"
 )
@@ -21,10 +22,11 @@ type InboundsSettings struct {
 }
 
 func CreateSocks5InboundDetourConfig(inbounds *proxy.Inbounds) (conf.InboundDetourConfig, error) {
-	var inboundsDetourConfig conf.InboundDetourConfig
+	var inboundDetourConfig conf.InboundDetourConfig
 
 	if inbounds.Protocol != Protocol {
-		return inboundsDetourConfig, fmt.Errorf("the protocol must be socks, param protocol: %s", inbounds.Protocol)
+		log.Errorf("The protocol must be socks, current protocol: %s", inbounds.Protocol)
+		return inboundDetourConfig, fmt.Errorf("the protocol must be socks, current protocol: %s", inbounds.Protocol)
 	}
 
 	settings := inbounds.Settings.(InboundsSettings)
@@ -35,7 +37,7 @@ func CreateSocks5InboundDetourConfig(inbounds *proxy.Inbounds) (conf.InboundDeto
 	})
 
 	inboundsSettingsMsg := json.RawMessage(inboundsSettings)
-	inboundsDetourConfig = conf.InboundDetourConfig{
+	inboundDetourConfig = conf.InboundDetourConfig{
 		Tag:      Tag,
 		Protocol: Protocol,
 		PortList: &conf.PortList{Range: []conf.PortRange{{From: inbounds.Port, To: inbounds.Port}}},
@@ -43,5 +45,5 @@ func CreateSocks5InboundDetourConfig(inbounds *proxy.Inbounds) (conf.InboundDeto
 		Settings: &inboundsSettingsMsg,
 	}
 
-	return inboundsDetourConfig, nil
+	return inboundDetourConfig, nil
 }
