@@ -4,7 +4,8 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/DenYulin/outline-go-tun2xray/xray/proxy"
-	"github.com/google/martian/log"
+	"github.com/DenYulin/outline-go-tun2xray/xray/proxy/base"
+	"github.com/eycorsican/go-tun2socks/common/log"
 	"github.com/xtls/xray-core/common/net"
 	"github.com/xtls/xray-core/infra/conf"
 )
@@ -49,6 +50,7 @@ func CreateVLessOutboundDetourConfig(outbounds proxy.Outbounds) (conf.OutboundDe
 		Tag:           Tag,
 		Settings:      &outboundsSettingsMsg,
 		ProxySettings: CreateProxySettings(outbounds.ProxyTag),
+		StreamSetting: CreateStreamSettings(outbounds.StreamSettings),
 		MuxSettings:   CreateMuxConfig(outbounds.MuxConcurrency),
 	}
 
@@ -69,7 +71,9 @@ func CreateProxySettings(proxyTag string) *conf.ProxyConfig {
 	return proxySettings
 }
 
-func CreateStreamSettings(network, security string) *conf.StreamConfig {
+func CreateStreamSettings(settings base.StreamSettings) *conf.StreamConfig {
+	network := settings.NetWork
+	security := settings.Security
 	netProtocol := conf.TransportProtocol(network)
 	streamSettings := conf.StreamConfig{
 		Network:  &netProtocol,

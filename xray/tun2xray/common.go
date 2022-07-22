@@ -3,7 +3,7 @@ package tun2xray
 import (
 	"encoding/json"
 	"github.com/DenYulin/outline-go-tun2xray/xray"
-	"github.com/DenYulin/outline-go-tun2xray/xray/DokodemoDoor"
+	"github.com/DenYulin/outline-go-tun2xray/xray/proxy/dokodemoDoor"
 	"github.com/eycorsican/go-tun2socks/common/log"
 	_ "github.com/xtls/xray-core/common"
 	xnet "github.com/xtls/xray-core/common/net"
@@ -63,7 +63,7 @@ func toNameServerConfig(hostPort string) *conf.NameServerConfig {
 }
 
 func CreateDokodemoDoorInboundDetourConfig(proxyPort uint32) conf.InboundDetourConfig {
-	inboundsSettings, _ := json.Marshal(DokodemoDoor.InboundsSettings{
+	inboundsSettings, _ := json.Marshal(dokodemoDoor.InboundsSettings{
 		Address:        "127.0.0.1",
 		Port:           proxyPort,
 		Network:        "tcp,udp",

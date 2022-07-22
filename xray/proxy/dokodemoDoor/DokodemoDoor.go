@@ -1,4 +1,4 @@
-package DokodemoDoor
+package dokodemoDoor
 
 type InboundsSettings struct {
 	Address        string `json:"address"`
