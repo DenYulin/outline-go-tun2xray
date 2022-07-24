@@ -6,16 +6,61 @@ import (
 	"github.com/DenYulin/outline-go-tun2xray/xray/proxy/socks"
 	"github.com/DenYulin/outline-go-tun2xray/xray/proxy/vless"
 	"github.com/xtls/xray-core/infra/conf"
+	"os"
+	"path"
 )
 
 func LoadXrayConfig(xrayConfig *XrayConfig) (*conf.Config, error) {
 	jsonConfig := &conf.Config{}
 	jsonConfig.LogConfig = CreateLogConfig(xrayConfig.LogConfig)
+	initLog(jsonConfig.LogConfig)
 
 	jsonConfig.InboundConfigs = CreateInboundConfigs(xrayConfig.Inbounds)
 	jsonConfig.OutboundConfigs = CreateOutboundConfigs(xrayConfig.Outbounds)
 
 	return jsonConfig, nil
+}
+
+func initLog(logConfig *conf.LogConfig) {
+	createLogFile(logConfig.AccessLog)
+	createLogFile(logConfig.ErrorLog)
+}
+
+func createLogFile(fullFileName string) {
+	if len(fullFileName) > 0 {
+		fInfo, err := os.Stat(fullFileName)
+
+		if os.IsNotExist(err) {
+			dir := path.Dir(fullFileName)
+
+			if _, err := os.Stat(dir); err != nil {
+				if os.IsNotExist(err) {
+					if err := os.MkdirAll(dir, 0777); err != nil {
+						return
+					}
+				} else {
+					return
+				}
+			}
+
+			accessFile, err := os.Create(fullFileName)
+			if err != nil {
+				return
+			}
+			defer accessFile.Close()
+		} else {
+			if fInfo.IsDir() {
+				accessFile, err := os.Create(fullFileName)
+				if err != nil {
+					if err := os.Remove(fullFileName); err != nil {
+						return
+					}
+					accessFile, err = os.Create(fullFileName)
+				}
+				defer accessFile.Close()
+			}
+		}
+	}
 }
 
 func CreateLogConfig(logConfig *LogConfig) *conf.LogConfig {
