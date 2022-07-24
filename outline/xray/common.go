@@ -4,7 +4,8 @@ import (
 	"encoding/json"
 	"errors"
 	"github.com/DenYulin/outline-go-tun2xray/outline"
-	"github.com/DenYulin/outline-go-tun2xray/xray/tun2xray"
+	"github.com/DenYulin/outline-go-tun2xray/tunnel"
+	profile2 "github.com/DenYulin/outline-go-tun2xray/xray/profile"
 	"github.com/eycorsican/go-tun2socks/common/log"
 	"io"
 	"os"
@@ -111,30 +112,40 @@ func CreateOutlineTunnel(tun TunWriter, configType, jsonConfig, serverAddress st
 	var outlineTunnel outline.Tunnel
 
 	if configType == XRayConfigTypeOfParams {
-		profile := &Profile{
-			InboundPort:      1080,
-			Host:             "127.0.0.1",
-			ServerAddress:    serverAddress,
-			ServerPort:       uint32(serverPort),
-			ID:               userId,
-			OutboundProtocol: tun2xray.VLESS,
-			LogLevel:         "debug",
-			Flow:             "xtls-rprx-direct",
-			DNS:              "1.1.1.1:53,8.8.8.8:53,8.8.4.4:53,9.9.9.9:53,208.67.222.222:53",
-			Mux:              -1,
-			Path:             "/",
-			Net:              "tcp",
-			TLS:              "xtls",
-			Type:             "none",
-			AllowInsecure:    false,
-			UseIPv6:          false,
-		}
+		allProfile := profile2.CreateProfile(serverAddress, uint32(serverPort), userId)
+		log.Infof("The param profile: %s", allProfile.String())
 
-		outlineTunnel, err = NewXrayTunnel(profile, tun)
+		xrayTunnel, err := tunnel.NewXrayTunnel(allProfile, tun)
 		if err != nil {
-			log.Errorf("Failed to create a new xray tunnel, profile: %s", profile.String())
+			log.Errorf("Failed to create new xray tunnel, error: %s", err.Error())
 			return nil, err
 		}
+		outlineTunnel = xrayTunnel
+
+		//profile := &Profile{
+		//	InboundPort:      1080,
+		//	Host:             "127.0.0.1",
+		//	ServerAddress:    serverAddress,
+		//	ServerPort:       uint32(serverPort),
+		//	ID:               userId,
+		//	OutboundProtocol: tun2xray.VLESS,
+		//	LogLevel:         "debug",
+		//	Flow:             "xtls-rprx-direct",
+		//	DNS:              "1.1.1.1:53,8.8.8.8:53,8.8.4.4:53,9.9.9.9:53,208.67.222.222:53",
+		//	Mux:              -1,
+		//	Path:             "/",
+		//	Net:              "tcp",
+		//	TLS:              "xtls",
+		//	Type:             "none",
+		//	AllowInsecure:    false,
+		//	UseIPv6:          false,
+		//}
+		//
+		//outlineTunnel, err = NewXrayTunnel(profile, tun)
+		//if err != nil {
+		//	log.Errorf("Failed to create a new xray tunnel, profile: %s", profile.String())
+		//	return nil, err
+		//}
 	} else if configType == XRayConfigTypeOfJson {
 		if len(jsonConfig) <= 0 {
 			log.Errorf("The param jsonConfig can not be empty")

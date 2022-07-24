@@ -70,6 +70,10 @@ func StartInstanceWithJson(configFilePath string) (*core.Instance, error) {
 	return instance, nil
 }
 
+func CheckXRayVersion() string {
+	return core.Version()
+}
+
 func CreateDNSConfig(option features.VLessOptions) *conf.DNSConfig {
 	routeMode := option.RouteMode
 	dnsConf := option.DNS

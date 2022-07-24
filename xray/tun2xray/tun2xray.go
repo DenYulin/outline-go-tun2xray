@@ -9,6 +9,8 @@ import (
 	"github.com/DenYulin/outline-go-tun2xray/features"
 	"github.com/DenYulin/outline-go-tun2xray/pool"
 	"github.com/DenYulin/outline-go-tun2xray/xray"
+	"github.com/DenYulin/outline-go-tun2xray/xray/config"
+	"github.com/DenYulin/outline-go-tun2xray/xray/profile"
 	"github.com/eycorsican/go-tun2socks/common/log"
 	t2core "github.com/eycorsican/go-tun2socks/core"
 	"github.com/xtls/xray-core/common/bytespool"
@@ -76,6 +78,33 @@ func StartXRayInstanceWithJson(configJson string) (*core.Instance, error) {
 	}
 	err = instance.Start()
 	if err != nil {
+		return nil, err
+	}
+	statsManager = instance.GetFeature(stats.ManagerType()).(stats.Manager)
+	return instance, nil
+}
+
+func StartXRayInstanceWithVLessAndXTLS(curProfile *profile.Profile) (*core.Instance, error) {
+	xrayConfig := profile.ToXrayConfig(curProfile)
+	newConfig, err := config.LoadXrayConfig(xrayConfig)
+	if err != nil {
+		log.Errorf("Failed to load xray config, xrayConfig: %s, error: %s", xrayConfig.String(), err.Error())
+		return nil, err
+	}
+	log.Infof("The xray core config: %+v", newConfig)
+
+	pbConfig, err := newConfig.Build()
+	if err != nil {
+		log.Fatalf("Execute newConfig.build error, error: %s", err.Error())
+		return nil, err
+	}
+	instance, err := core.New(pbConfig)
+	if err != nil {
+		log.Errorf("Failed to create a new xray core instance, error: %+v", err)
+		return nil, err
+	}
+	if err = instance.Start(); err != nil {
+		log.Errorf("Failed to start xray instance, err: %+v", err)
 		return nil, err
 	}
 	statsManager = instance.GetFeature(stats.ManagerType()).(stats.Manager)

@@ -15,9 +15,13 @@ const (
 	Protocol = "vless"
 )
 
+const (
+	FlowXTlsRPrxDirect = "xtls-rprx-direct"
+)
+
 type Users struct {
 	ID         string `json:"id"`
-	Encryption int    `json:"encryption"`
+	Encryption string `json:"encryption"`
 	Flow       string `json:"flow"`
 	Level      int    `json:"level"`
 }
@@ -32,12 +36,12 @@ type OutboundsSettings struct {
 	Vnext []Vnext `json:"vnext,omitempty"`
 }
 
-func CreateVLessOutboundDetourConfig(outbounds proxy.Outbounds) (conf.OutboundDetourConfig, error) {
+func CreateVLessOutboundDetourConfig(outbounds *proxy.Outbounds) (conf.OutboundDetourConfig, error) {
 	var outboundDetourConfig conf.OutboundDetourConfig
 
-	if outbounds.Protocol == Protocol {
-		log.Errorf("The protocol must be socks, current protocol: %s", outbounds.Protocol)
-		return outboundDetourConfig, fmt.Errorf("the protocol must be socks, current protocol: %s", outbounds.Protocol)
+	if outbounds.Protocol != Protocol {
+		log.Errorf("The protocol must be VLess, current protocol: %s", outbounds.Protocol)
+		return outboundDetourConfig, fmt.Errorf("the protocol must be VLess, current protocol: %s", outbounds.Protocol)
 	}
 
 	settings := outbounds.Settings.(OutboundsSettings)
@@ -81,8 +85,22 @@ func CreateStreamSettings(settings base.StreamSettings) *conf.StreamConfig {
 	}
 
 	switch network {
-	case "tcp":
-	case "kcp":
+	case base.TLS:
+		if security == base.TLS {
+			tlsConfig := &conf.TLSConfig{
+				ServerName: settings.ServerName,
+			}
+			streamSettings.TLSSettings = tlsConfig
+		} else if security == base.XTLS {
+			xtlsConfig := &conf.XTLSConfig{
+				ServerName: settings.ServerName,
+				ALPN:       &conf.StringList{"h2", "http/1.1"},
+				MinVersion: "1.2",
+				MaxVersion: "1.3",
+			}
+			streamSettings.XTLSSettings = xtlsConfig
+		}
+	case base.KCP:
 		mtu := uint32(1350)
 		tti := uint32(50)
 		upCap := uint32(12)
@@ -99,6 +117,7 @@ func CreateStreamSettings(settings base.StreamSettings) *conf.StreamConfig {
 			Congestion:      &congestion,
 			ReadBufferSize:  &readBufferSize,
 			WriteBufferSize: &writeBufferSize,
+			HeaderConfig:    base.CreateHeaderConfig(settings.HeaderType),
 		}
 		streamSettings.KCPSettings = kcpSettings
 	}

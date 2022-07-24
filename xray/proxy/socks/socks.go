@@ -14,11 +14,13 @@ const (
 	Protocol = "socks"
 )
 
+const DefaultAuth = "noauth"
+
 type InboundsSettings struct {
-	Auth      string `json:"auth,default="`
-	IP        string `json:"ip"`
-	UDP       bool   `json:"udp"`
-	UserLevel int32  `json:"userLevel"`
+	Auth      string `json:"auth,default=noauth"`
+	IP        string `json:"ip,default=127.0.0.1"`
+	UDP       bool   `json:"udp,default=true"`
+	UserLevel int32  `json:"userLevel,optional"`
 }
 
 func CreateSocks5InboundDetourConfig(inbounds *proxy.Inbounds) (conf.InboundDetourConfig, error) {

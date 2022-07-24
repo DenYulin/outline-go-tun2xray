@@ -5,7 +5,14 @@ import (
 	"github.com/DenYulin/outline-go-tun2xray/features"
 	"github.com/DenYulin/outline-go-tun2xray/outline/xray"
 	_ "github.com/DenYulin/outline-go-tun2xray/xray/features"
+	profile2 "github.com/DenYulin/outline-go-tun2xray/xray/profile"
 	"github.com/DenYulin/outline-go-tun2xray/xray/tun2xray"
+	"github.com/eycorsican/go-tun2socks/common/log"
+	"os"
+	"os/signal"
+	"runtime"
+	"runtime/debug"
+	"syscall"
 )
 
 var profile = &tun2xray.VLess{
@@ -41,7 +48,40 @@ func main() {
 	//	return
 	//}
 
-	startXray()
+	//startXray()
+	startXrayV2()
+}
+
+func startXrayV2() {
+	//serverAddress := "20.205.36.99"
+	//serverPort := uint32(443)
+	//userId := "3b7c7324-fee1-452b-91d9-63bebd3b3c09"
+
+	serverAddress := "www.subaru-rabbit.cc"
+	serverPort := uint32(443)
+	userId := "31e99eb9-1812-4ad1-a442-99c5e9610611"
+
+	allProfile := profile2.CreateProfile(serverAddress, serverPort, userId)
+	allProfile.AccessLog = "/tmp/outline/log/access.log"
+	allProfile.ErrorLog = "/tmp/outline/log/error.log"
+	log.Infof("The param profile: %s", allProfile.String())
+
+	xrayClient, err := tun2xray.StartXRayInstanceWithVLessAndXTLS(allProfile)
+	if err != nil {
+		log.Errorf("Failed to start xray client with vless and xtls, profile: %s, error: %s", allProfile.String(), err.Error())
+		return
+	}
+	defer xrayClient.Close()
+
+	runtime.GC()
+	debug.FreeOSMemory()
+
+	{
+		osSignals := make(chan os.Signal, 1)
+		signal.Notify(osSignals, os.Interrupt, syscall.SIGTERM)
+		<-osSignals
+	}
+	log.Infof("end")
 }
 
 func startXray() {
